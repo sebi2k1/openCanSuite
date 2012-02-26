@@ -30,13 +30,24 @@ MainWindow::MainWindow(QObject* parent)
     QVBoxLayout *layout = new QVBoxLayout(this);
 
     QCanSignalContainer *m = new QCanSignalContainer("CruiseControlStatus", 0x37F, false);
-    m->addSignal(new QCanSignal("SpeedKm", 2, 8, ENDIANESS_INTEL));
+    QCanSignal *s = new QCanSignal("SpeedKm", 2, 8, ENDIANESS_INTEL);
+    m->addSignal(s);
 
     m_CanSignals.addMessage(m);
+
+    QObject::connect(s, SIGNAL(valueChanged()), this, SLOT(signalValueChanged()));
 
     m_CanChannel.Start();
 }
 
 MainWindow::~MainWindow()
 {
+}
+
+void MainWindow::signalValueChanged()
+{
+    QCanSignal *signal = static_cast<QCanSignal *>(QObject::sender());
+
+    if (signal)
+        qDebug("Signal changed: %llu", signal->getRawValue());
 }

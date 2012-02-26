@@ -27,13 +27,17 @@
 #include <net/if.h>
 #include <linux/can.h>
 
-struct can_message
+struct QCanMessage
 {
-    struct can_frame frame;
     struct timeval tv;
+
+    quint32 id;
+    bool isExt;
+    quint8 dlc;
+    quint8 data[8];
 };
 
-Q_DECLARE_METATYPE(can_message);
+Q_DECLARE_METATYPE(QCanMessage);
 
 /**
  * QT based implemenation of a SocketCAN channel.
@@ -43,7 +47,7 @@ class QCanChannel : public QThread
     Q_OBJECT
 
 signals:
-    void canMessageReceived(const can_message & frame);
+    void canMessageReceived(const QCanMessage & frame);
 
 public:
     /**

@@ -35,6 +35,9 @@ public:
     explicit MainWindow(QObject* parent = NULL);
     virtual ~MainWindow();
 
+private slots:
+    void signalValueChanged();
+
 private:
     QCanChannel m_CanChannel;
     QCanSignals m_CanSignals;

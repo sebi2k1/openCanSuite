@@ -50,7 +50,7 @@ QCanChannel::QCanChannel(const char *name)
         }
     }
 
-    qRegisterMetaType<can_message>("can_message");
+    qRegisterMetaType<QCanMessage>("QCanMessage");
 }
 
 QCanChannel::~QCanChannel()
@@ -96,10 +96,19 @@ void QCanChannel::run()
             break;
 
         if (FD_ISSET(m_SocketFd, &rdfs)) {
-            can_message message;
+            QCanMessage message;
 
-            if (recv(m_SocketFd, &message.frame, sizeof(struct can_frame), MSG_DONTWAIT) > 0) {
+            struct can_frame frame;
+
+            if (recv(m_SocketFd, &frame, sizeof(struct can_frame), MSG_DONTWAIT) > 0) {
                 ioctl(m_SocketFd, SIOCGSTAMP, &message.tv);
+
+                message.isExt = (frame.can_id & CAN_EFF_FLAG) ? true : false;
+                message.id = frame.can_id & (message.isExt ? CAN_EFF_MASK : CAN_SFF_MASK);
+                message.dlc = frame.can_dlc;
+
+                ::memcpy(&message.data[0], &frame.data[0], 8);
+
                 canMessageReceived(message);
             }
         }

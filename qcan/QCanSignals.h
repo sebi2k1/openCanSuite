@@ -28,7 +28,7 @@
 #include <QObject>
 
 class QCanChannel;
-struct can_message;
+struct QCanMessage;
 
 typedef enum ENDIANESS
 {
@@ -48,16 +48,26 @@ signals:
 
 public:
     QCanSignal(const char* name, quint8 offset, quint32 length, ENDIANESS order)
-     : m_Name(name), m_Offset(offset), m_Length(length), m_Order(order) {}
+     : m_Name(name), m_Offset(offset), m_Length(length), m_Order(order), m_RawValue(0) {}
     ~QCanSignal() {}
+
+    void decodeFromMessage(const QCanMessage & message);
+    void encodeToMessage(QCanMessage & message) const;
+
+    quint64 getRawValue() { return m_RawValue; }
 
 private:
     QString m_Name;
     const quint8 m_Offset;
     const quint32 m_Length;
     const ENDIANESS m_Order;
+
+    quint64 m_RawValue;
 };
 
+/**
+ * This object describes a CAN message holding certain CAN signals
+ */
 class QCanSignalContainer : public QObject
 {
     Q_OBJECT
@@ -72,7 +82,7 @@ public:
 
     void addSignal(QCanSignal* signal) { m_Signals.push_back(signal); }
 
-    void dispatchMessage(const can_message & frame);
+    void dispatchMessage(const QCanMessage & frame);
 
 private:
     QString m_Name;
@@ -82,6 +92,9 @@ private:
     QVector<QCanSignal*> m_Signals;
 };
 
+/**
+ * Manage a set of message/signals on a CAN channel.
+ */
 class QCanSignals : public QObject
 {
     Q_OBJECT
@@ -93,7 +106,7 @@ public:
     void addMessage(QCanSignalContainer* message) { m_Messages.push_back(message); }
 
 private slots:
-    void canMessageReceived(const can_message & frame);
+    void canMessageReceived(const QCanMessage & frame);
 
 private:
     QCanChannel* m_CanChannel;
