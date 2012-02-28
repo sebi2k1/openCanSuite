@@ -27,6 +27,8 @@
 
 #include <QObject>
 
+#include <QDomElement>
+
 class QCanChannel;
 struct QCanMessage;
 
@@ -47,7 +49,7 @@ signals:
     void valueChanged();
 
 public:
-    QCanSignal(const char* name, quint8 offset, quint32 length, ENDIANESS order)
+    QCanSignal(QString & name, quint8 offset, quint32 length, ENDIANESS order)
      : m_Name(name), m_Offset(offset), m_Length(length), m_Order(order), m_RawValue(0) {}
     ~QCanSignal() {}
 
@@ -55,6 +57,7 @@ public:
     void encodeToMessage(QCanMessage & message) const;
 
     quint64 getRawValue() { return m_RawValue; }
+    const QString & getName() { return m_Name; }
 
 private:
     QString m_Name;
@@ -76,13 +79,26 @@ signals:
     void valueChanged();
 
 public:
-    QCanSignalContainer(const char* name, quint32 id, bool isExt)
+    QCanSignalContainer(QString & name, quint32 id, bool isExt)
      : m_Name(name), m_CanId(id), m_IsExt(isExt) {}
     ~QCanSignalContainer() {}
+
+    const QString & getName() { return m_Name; }
 
     void addSignal(QCanSignal* signal) { m_Signals.push_back(signal); }
 
     void dispatchMessage(const QCanMessage & frame);
+
+    QCanSignal & operator[](const char *name) {
+        QVector<QCanSignal*>::iterator iter = m_Signals.begin();
+        while(iter != m_Signals.end()) {
+            if ((*iter)->getName().compare(name) == 0)
+                return *(*iter);
+            ++iter;
+        }
+
+        // TODO: Return dummy signal without behaviour
+    }
 
 private:
     QString m_Name;
@@ -103,7 +119,20 @@ public:
     QCanSignals(QCanChannel* channel);
     ~QCanSignals();
 
+    static QCanSignals* createFromKCD(QCanChannel* channel, const QDomElement & e);
+
     void addMessage(QCanSignalContainer* message) { m_Messages.push_back(message); }
+
+    QCanSignalContainer & operator[](const char *name) {
+        QVector<QCanSignalContainer*>::iterator iter = m_Messages.begin();
+        while(iter != m_Messages.end()) {
+            if ((*iter)->getName().compare(name) == 0)
+                return *(*iter);
+            ++iter;
+        }
+
+        // TODO: Return dummy signal without behaviour
+    }
 
 private slots:
     void canMessageReceived(const QCanMessage & frame);

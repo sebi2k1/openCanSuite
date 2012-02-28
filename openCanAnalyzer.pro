@@ -1,7 +1,8 @@
 TEMPLATE = app
 TARGET = openCanAnalyzer
 QT += core \
-    gui
+    gui\
+    xml
 HEADERS += qcan/QCanSignals.h \
     qcan/QCanChannel.h \
     MainWindow.h

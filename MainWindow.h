@@ -27,7 +27,7 @@
 #include <qcan/QCanChannel.h>
 #include <qcan/QCanSignals.h>
 
-class MainWindow : public QWidget
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
@@ -40,7 +40,7 @@ private slots:
 
 private:
     QCanChannel m_CanChannel;
-    QCanSignals m_CanSignals;
+    QCanSignals* m_CanSignals;
 };
 
 #endif /* MAINWINDOW_H_ */

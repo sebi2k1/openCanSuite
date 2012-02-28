@@ -18,24 +18,59 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#include <iostream>
 
 #include "MainWindow.h"
 
+#include <QDomDocument>
+
+static QDomElement findBusByName(QDomElement & docElem, const QString & name)
+{
+    QDomNode n = docElem.firstChild();
+
+    while(!n.isNull()) {
+        if (n.nodeName().compare("Bus") == 0) {
+            QDomElement e = n.toElement();
+
+            if(!e.isNull()) {
+                if (e.attribute("name").compare(name) == 0)
+                    return e;
+            }
+        }
+
+        n = n.nextSibling();
+    }
+
+    return QDomElement();
+}
+
 MainWindow::MainWindow(QObject* parent)
- : m_CanChannel("vcan0"),
-   m_CanSignals(&m_CanChannel)
+ : m_CanChannel("vcan0")
 {
     setWindowTitle("openCanAnalyzer");
 
     QVBoxLayout *layout = new QVBoxLayout(this);
 
-    QCanSignalContainer *m = new QCanSignalContainer("CruiseControlStatus", 0x37F, false);
-    QCanSignal *s = new QCanSignal("SpeedKm", 2, 8, ENDIANESS_INTEL);
-    m->addSignal(s);
+    QDomDocument doc;
 
-    m_CanSignals.addMessage(m);
+    QFile file("./can_definition_sample.kcd");
+    if (!file.open(QIODevice::ReadOnly))
+        return;
 
-    QObject::connect(s, SIGNAL(valueChanged()), this, SLOT(signalValueChanged()));
+    if (!doc.setContent(&file)) {
+        file.close();
+        return;
+    }
+
+    QDomElement docElem = doc.documentElement();
+    QDomElement e = findBusByName(docElem, "Motor");
+
+    if (!e.isNull())
+        m_CanSignals = QCanSignals::createFromKCD(&m_CanChannel, e);
+
+    file.close();
+
+    QObject::connect(&(*m_CanSignals)["CruiseControlStatus"]["SpeedKm"], SIGNAL(valueChanged()), this, SLOT(signalValueChanged()));
 
     m_CanChannel.Start();
 }

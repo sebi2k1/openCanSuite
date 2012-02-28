@@ -27,6 +27,52 @@
 /**
  * QCanSignals
  */
+QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement & e)
+{
+    QCanSignals *s = new QCanSignals(channel);
+
+    QDomNode messageNode = e.firstChild();
+
+    // Find all "Message" nodes
+    while(!messageNode.isNull()) {
+       if (messageNode.nodeName().compare("Message") == 0) {
+           QDomElement messageElem = messageNode.toElement();
+
+           if (!messageElem.isNull()) {
+               QString name = messageElem.attribute("name");
+               quint32 id   = messageElem.attribute("id").toLong(NULL, 16);
+               bool ext     = messageElem.attribute("format", "standard").compare("extended") == 0;
+
+               QCanSignalContainer *sc = new QCanSignalContainer(name, id, ext);
+
+               // Find all "Signal" nodes
+               for (QDomNode signalNode = messageElem.firstChild(); !signalNode.isNull(); signalNode = signalNode.nextSibling()) {
+                   if (signalNode.nodeName().compare("Signal") == 0) {
+                       QDomElement signalElem = signalNode.toElement();
+
+                       if (signalElem.isNull())
+                           continue;
+
+                       name = signalElem.attribute("name");
+                       quint32 offset = signalElem.attribute("offset").toLong();
+                       quint32 length = signalElem.attribute("length").toLong();
+                       ENDIANESS order = signalElem.attribute("endianess", "little").compare("little") == 0 ? ENDIANESS_INTEL : ENDIANESS_MOTOROLA;
+
+                       QCanSignal * signal = new QCanSignal(name, offset, length, order);
+
+                       sc->addSignal(signal);
+                   }
+               }
+               
+               s->addMessage(sc);
+           }
+       }
+
+       messageNode = messageNode.nextSibling();
+    }
+
+    return s;
+}
 
 QCanSignals::QCanSignals(QCanChannel* channel) : m_CanChannel(channel)
 {
@@ -66,6 +112,7 @@ void QCanSignalContainer::dispatchMessage(const QCanMessage & frame)
 /**
  * QCanSignal
  */
+
 
 static quint64 _getvalue(const quint8 * const data, quint32 offset, quint32 length, ENDIANESS byteOrder)
 {
