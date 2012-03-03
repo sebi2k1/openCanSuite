@@ -28,6 +28,7 @@
 #include <QObject>
 
 #include <QDomElement>
+#include <QMetaType>
 
 class QCanChannel;
 struct QCanMessage;
@@ -38,6 +39,8 @@ typedef enum ENDIANESS
     ENDIANESS_INTEL
 } ENDIANESS;
 
+Q_DECLARE_METATYPE(struct timeval);
+
 /**
  * A QCanSignal represent a physical value transmitted in a CAN message.
  */
@@ -46,7 +49,7 @@ class QCanSignal : public QObject
     Q_OBJECT
 
 signals:
-    void valueChanged();
+    void valueChanged(const struct timeval & val, double value);
 
 public:
     QCanSignal(QString & name, quint8 offset, quint32 length, ENDIANESS order)
@@ -74,9 +77,6 @@ private:
 class QCanSignalContainer : public QObject
 {
     Q_OBJECT
-
-signals:
-    void valueChanged();
 
 public:
     QCanSignalContainer(QString & name, quint32 id, bool isExt)

@@ -75,6 +75,8 @@ void QCanChannel::Stop()
 
     if (m_SocketFd > 0)
         close(m_SocketFd);
+
+    wait();
 }
 
 void QCanChannel::run()

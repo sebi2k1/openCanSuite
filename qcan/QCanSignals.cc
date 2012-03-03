@@ -157,7 +157,7 @@ void QCanSignal::decodeFromMessage(const QCanMessage & message)
     m_RawValue = value;
 
     if (changed)
-        valueChanged();
+        valueChanged(message.tv, (double)value);
 }
 
 void _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 data[8], quint64 raw_value)
