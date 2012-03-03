@@ -1,13 +1,16 @@
 TEMPLATE = app
 TARGET = openCanAnalyzer
 QT += core \
-    gui\
+    gui \
     xml
-HEADERS += qcan/QCanSignals.h \
+HEADERS += QRealtimePlotter.h \
+    qcan/QCanSignals.h \
     qcan/QCanChannel.h \
     MainWindow.h
-SOURCES += qcan/QCanSignals.cc \
+SOURCES += QRealtimePlotter.cc \
+    qcan/QCanSignals.cc \
     qcan/QCanChannel.cc \
     MainWindow.cc \
     main.cc
 RESOURCES += 
+LIBS += -lqwt

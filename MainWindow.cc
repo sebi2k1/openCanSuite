@@ -49,7 +49,7 @@ MainWindow::MainWindow(QObject* parent)
 {
     setWindowTitle("openCanAnalyzer");
 
-    QVBoxLayout *layout = new QVBoxLayout(this);
+    //QVBoxLayout *layout = new QVBoxLayout(this);
 
     QDomDocument doc;
 
@@ -70,7 +70,19 @@ MainWindow::MainWindow(QObject* parent)
 
     file.close();
 
-    QObject::connect(&(*m_CanSignals)["CruiseControlStatus"]["SpeedKm"], SIGNAL(valueChanged()), this, SLOT(signalValueChanged()));
+    QObject::connect(&(*m_CanSignals)["CruiseControlStatus"]["SpeedKm"], SIGNAL(valueChanged(const struct timeval &, double)), this, SLOT(signalValueChanged(const struct timeval &, double)));
+
+    m_Plotter = new QRealtimePlotter(this);
+
+    m_Plotter->setTitle( "History" );
+
+    const int margin = 5;
+    m_Plotter->setContentsMargins( margin, margin, margin, margin );
+
+    layout()->addWidget(m_Plotter);
+    m_Plotter->resize(600, 400);
+
+    m_Plotter->changeScale(QRealtimePlotter::E_SCALE_LEFT, 0.0, 100.0, "km/h");
 
     m_CanChannel.Start();
 }
@@ -79,10 +91,10 @@ MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::signalValueChanged()
+void MainWindow::signalValueChanged(const struct timeval & tv, double value)
 {
     QCanSignal *signal = static_cast<QCanSignal *>(QObject::sender());
 
     if (signal)
-        qDebug("Signal changed: %llu", signal->getRawValue());
+        m_Plotter->newSampleReceived(tv, value, signal->getName());
 }

@@ -27,6 +27,8 @@
 #include <qcan/QCanChannel.h>
 #include <qcan/QCanSignals.h>
 
+#include <QRealtimePlotter.h>
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -36,11 +38,13 @@ public:
     virtual ~MainWindow();
 
 private slots:
-    void signalValueChanged();
+    void signalValueChanged(const struct timeval & tv, double value);
 
 private:
     QCanChannel m_CanChannel;
     QCanSignals* m_CanSignals;
+
+    QRealtimePlotter *m_Plotter;
 };
 
 #endif /* MAINWINDOW_H_ */
