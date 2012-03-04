@@ -30,7 +30,7 @@
 
 #include "QCanChannel.h"
 
-QCanChannel::QCanChannel(const char *name)
+QCanChannel::QCanChannel(const QString & name)
 {
     m_SocketFd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
     m_TerminationRequested = false;
@@ -38,7 +38,7 @@ QCanChannel::QCanChannel(const char *name)
     if (m_SocketFd > 0) {
         struct ifreq ifr;
 
-        strcpy(ifr.ifr_name, name);
+        strcpy(ifr.ifr_name, name.toStdString().c_str());
         ioctl(m_SocketFd, SIOCGIFINDEX, &ifr);
 
         m_SocketAddr.can_family = PF_CAN;

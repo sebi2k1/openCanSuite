@@ -53,7 +53,7 @@ public:
     /**
      * @param name interface name of CAN interface
      */
-    QCanChannel(const char *name);
+    QCanChannel(const QString & name);
     ~QCanChannel();
 
     bool IsValid() { return m_SocketFd > 0; }
