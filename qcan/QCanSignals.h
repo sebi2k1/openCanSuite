@@ -53,7 +53,8 @@ signals:
 
 public:
     QCanSignal(QString & name, quint8 offset, quint32 length, ENDIANESS order)
-     : m_Name(name), m_Offset(offset), m_Length(length), m_Order(order), m_RawValue(0) {
+     : m_Name(name), m_Offset(offset), m_Length(length), m_Order(order),
+       m_Slope(1.0), m_Intercept(0.0), m_RawValue(0) {
         m_Lower = 0.0;
         m_Upper = (1 << m_Length) - 1; 
     }
@@ -63,13 +64,15 @@ public:
     void setLimit(double lower, double upper) { m_Lower = lower; m_Upper = upper; }
     void getLimit(double & lower, double & upper) { lower = m_Lower; upper = m_Upper; }
 
-    void setFactor(double factor);
-    void setOffset(double offset);
+    void setEquationOperands(double slope, double intercept) {
+        m_Slope = slope;
+        m_Intercept = intercept;
+    }
 
     void decodeFromMessage(const QCanMessage & message);
     void encodeToMessage(QCanMessage & message) const;
 
-    double getPhysicalValue();
+    double getPhysicalValue() { return m_PhysicalValue; }
     quint64 getRawValue() { return m_RawValue; }
 
     const QString & getName() { return m_Name; }
@@ -83,7 +86,11 @@ private:
     double m_Lower;
     double m_Upper;
 
+    double m_Slope;
+    double m_Intercept;
+
     quint64 m_RawValue;
+    double m_PhysicalValue;
 };
 
 /**

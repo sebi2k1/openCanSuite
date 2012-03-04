@@ -60,6 +60,26 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
 
                        QCanSignal * signal = new QCanSignal(name, offset, length, order);
 
+                       for (QDomNode valueNode = signalElem.firstChild(); !valueNode.isNull(); valueNode = valueNode.nextSibling()) {
+                           if (valueNode.nodeName().compare("Value") == 0) {
+                               QDomElement valueElem = valueNode.toElement();
+
+                               if (valueElem.isNull())
+                                   continue;
+
+                               double slope = valueElem.attribute("slope", "1.0").toDouble();
+                               double intercept = valueElem.attribute("intercept", "0.0").toDouble();
+
+                               signal->setEquationOperands(slope, intercept);
+
+                               QString min = valueElem.attribute("min", "0.0");
+                               QString max = valueElem.attribute("max");
+                                
+                               if (!max.isEmpty())
+                                   signal->setLimit(min.toDouble(), max.toDouble());
+                           }
+                       }
+
                        sc->addSignal(signal);
                    }
                }
@@ -156,8 +176,16 @@ void QCanSignal::decodeFromMessage(const QCanMessage & message)
 
     m_RawValue = value;
 
+    m_PhysicalValue = (m_RawValue * m_Slope) + m_Intercept;
+
+    if (m_PhysicalValue < m_Lower)
+        m_PhysicalValue = m_Lower;
+
+    if (m_PhysicalValue > m_Upper)
+        m_PhysicalValue = m_Upper;
+
     if (changed)
-        valueChanged(message.tv, (double)value);
+        valueChanged(message.tv, m_PhysicalValue);
 }
 
 void _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 data[8], quint64 raw_value)
