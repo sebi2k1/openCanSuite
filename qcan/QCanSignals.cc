@@ -74,9 +74,12 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
 
                                QString min = valueElem.attribute("min", "0.0");
                                QString max = valueElem.attribute("max");
-                                
+
                                if (!max.isEmpty())
                                    signal->setLimit(min.toDouble(), max.toDouble());
+
+                               bool isSigned = valueElem.attribute("type", "unsigned").compare("signed") == 0 ? true : false;
+                               signal->setIsSigned(isSigned);
                            }
                        }
 
@@ -176,7 +179,14 @@ void QCanSignal::decodeFromMessage(const QCanMessage & message)
 
     m_RawValue = value;
 
-    m_PhysicalValue = (m_RawValue * m_Slope) + m_Intercept;
+    // Convert from 2s complement
+    if ((m_RawValue & (1 << (m_Length - 1))) && m_IsSigned) {
+        qint32 tmp = -1 * (~((~Q_UINT64_C(0) << m_Length) | m_RawValue) + 1);
+        m_PhysicalValue = (tmp * m_Slope) + m_Intercept;
+    }
+    else {
+        m_PhysicalValue = (m_RawValue * m_Slope) + m_Intercept;
+    }
 
     if (m_PhysicalValue < m_Lower)
         m_PhysicalValue = m_Lower;

@@ -89,7 +89,7 @@
 	     	  <Consumer>
 	     	  	<NodeRef id="12"/>
 	     	  </Consumer>
-	     	  <Value type="unsigned" slope="0.5" intercept="-40" unit="Cel"/>
+	     	  <Value type="unsigned" slope="0.5" intercept="-40" min="-40" max="200" unit="Cel"/>
 	       	  <LabelSet>
 	     	    <Label name="init" value="0"/>
 	     	    <LabelGroup type="error" name="Sensor error" from="1021" to="1023"/>
@@ -116,7 +116,7 @@
 			<Signal name="CCEnabled" offset="0"/>
 			<Signal name="CCActivated" offset="1"/>
 			<Signal name="SpeedKm" offset="2" length="8" endianess="little">
-				<Value type="signed"/>
+				<Value type="signed" min="-100.0" max="100.0"/>
 			</Signal>
 		</Message>		
 		

@@ -124,7 +124,7 @@ void MainWindow::addScale(QRealtimePlotter::scale_t scale, const ScaleDescriptio
         s.getLimit(tmp_lower, tmp_upper);
 
         if (tmp_lower < lower)
-            tmp_lower = lower;
+            lower = tmp_lower;
 
         if (tmp_upper > upper)
             upper = tmp_upper;
@@ -133,6 +133,7 @@ void MainWindow::addScale(QRealtimePlotter::scale_t scale, const ScaleDescriptio
 
         iter++;
     }
+
 
     m_Plotter->changeScale(scale, lower, upper, desc.getScaleName());
 }

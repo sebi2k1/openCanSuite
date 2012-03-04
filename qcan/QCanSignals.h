@@ -54,7 +54,8 @@ signals:
 public:
     QCanSignal(QString & name, quint8 offset, quint32 length, ENDIANESS order)
      : m_Name(name), m_Offset(offset), m_Length(length), m_Order(order),
-       m_Slope(1.0), m_Intercept(0.0), m_RawValue(0) {
+       m_Slope(1.0), m_Intercept(0.0), m_RawValue(0), m_PhysicalValue(0),
+       m_IsSigned(false) {
         m_Lower = 0.0;
         m_Upper = (1 << m_Length) - 1; 
     }
@@ -77,6 +78,8 @@ public:
 
     const QString & getName() { return m_Name; }
 
+    void setIsSigned(bool isSigned) { m_IsSigned = isSigned; }
+
 private:
     QString m_Name;
     const quint8 m_Offset;
@@ -91,6 +94,8 @@ private:
 
     quint64 m_RawValue;
     double m_PhysicalValue;
+
+    bool m_IsSigned;
 };
 
 /**
