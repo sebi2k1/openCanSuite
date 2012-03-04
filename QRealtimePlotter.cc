@@ -47,10 +47,18 @@ QRealtimePlotter::QRealtimePlotter(QWidget *parent) : QwtPlot(parent)
     setAxisTitle(QwtPlot::xBottom, "Time");
 
     m_Curves[0].curve = new QwtPlotCurve();
+    m_Curves[0].curve->setRenderHint(QwtPlotItem::RenderAntialiased);
+
+    QColor c("red");
+    c.setAlpha(150);
+
+    m_Curves[0].curve->setPen(c);
     m_Curves[0].curve->attach(this);
     m_Curves[0].sample_count = 0;
 
     setTimeScale(1000.0);
+
+    QObject::connect(&m_UpdateTimer, SIGNAL(timeout()), this, SLOT(updateTimeScale()));
 }
 
 void QRealtimePlotter::changeScale(scale_t scale,
@@ -66,9 +74,28 @@ void QRealtimePlotter::changeScale(scale_t scale,
 
 void QRealtimePlotter::setTimeScale(const double & interval_ms)
 {
+    m_Interval = interval_ms;
+}
+
+void QRealtimePlotter::startRecording()
+{
+    updateTimeScale();
+}
+
+void QRealtimePlotter::suspendRecording()
+{
+    m_UpdateTimer.stop();
+}
+
+void QRealtimePlotter::updateTimeScale()
+{
     double now = static_cast<double>(QDateTime::currentDateTime().toMSecsSinceEpoch());
 
-    setAxisScale(QwtPlot::xBottom, now, now + interval_ms);
+    setAxisScale(QwtPlot::xBottom, now, now + m_Interval);
+
+    replot();
+
+    m_UpdateTimer.start(m_Interval);
 }
 
 void QRealtimePlotter::newSampleReceived(const struct timeval & tv, double sample, const QString & source_name)

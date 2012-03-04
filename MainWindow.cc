@@ -44,16 +44,42 @@ static QDomElement findBusByName(QDomElement & docElem, const QString & name)
     return QDomElement();
 }
 
-MainWindow::MainWindow(QObject* parent)
- : m_CanChannel("vcan0")
+ScaleDescription * ScaleDescription::CreateScaleDescriptionFromString(const QString & name, const QString & str)
+{
+    ScaleDescription *sd = new ScaleDescription();
+
+    sd->m_ScaleName = name;
+
+    QStringList l = str.split(",");
+    QString s;
+
+    foreach(s, l) {
+        int message_signal_sep = s.indexOf(".");
+        int signal_color_sep = s.indexOf("/");
+
+        if (message_signal_sep >= signal_color_sep)
+            continue;
+
+        struct Curve curve;
+
+        curve.messsage =  s.left(message_signal_sep);
+        curve.signal =  s.mid(message_signal_sep + 1, (signal_color_sep - 1) - message_signal_sep);
+        curve.color =  QColor(s.mid(signal_color_sep + 1));
+
+        sd->m_Curves.push_back(curve);
+    }
+
+    return sd;
+}
+
+MainWindow::MainWindow(const QString & channel, const QString & filename, const QString & busname, QObject* parent)
+ : m_CanChannel(channel)
 {
     setWindowTitle("openCanAnalyzer");
 
-    //QVBoxLayout *layout = new QVBoxLayout(this);
-
     QDomDocument doc;
 
-    QFile file("./can_definition_sample.kcd");
+    QFile file(filename);
     if (!file.open(QIODevice::ReadOnly))
         return;
 
@@ -63,32 +89,50 @@ MainWindow::MainWindow(QObject* parent)
     }
 
     QDomElement docElem = doc.documentElement();
-    QDomElement e = findBusByName(docElem, "Motor");
+    QDomElement e = findBusByName(docElem, busname);
 
     if (!e.isNull())
         m_CanSignals = QCanSignals::createFromKCD(&m_CanChannel, e);
 
     file.close();
 
-    QObject::connect(&(*m_CanSignals)["CruiseControlStatus"]["SpeedKm"], SIGNAL(valueChanged(const struct timeval &, double)), this, SLOT(signalValueChanged(const struct timeval &, double)));
-
-    m_Plotter = new QRealtimePlotter(this);
-
-    m_Plotter->setTitle( "History" );
-
-    const int margin = 5;
-    m_Plotter->setContentsMargins( margin, margin, margin, margin );
-
-    layout()->addWidget(m_Plotter);
-    m_Plotter->resize(600, 400);
-
-    m_Plotter->changeScale(QRealtimePlotter::E_SCALE_LEFT, 0.0, 100.0, "km/h");
-
     m_CanChannel.Start();
 }
 
 MainWindow::~MainWindow()
 {
+}
+
+void MainWindow::addPlot(const ScaleDescription & left, const ScaleDescription & right)
+{
+    m_Plotter = new QRealtimePlotter(this);
+
+    const int margin = 5;
+    m_Plotter->setContentsMargins(margin, margin, margin, margin);
+
+    m_Plotter->setTitle( "History" );
+    m_Plotter->resize(600, 400);
+
+    m_Plotter->changeScale(QRealtimePlotter::E_SCALE_LEFT, 0.0, 100.0, "km/h");
+    m_Plotter->setTimeScale(5000.0);
+
+    double lower = 0.0, upper = 0.0;
+
+    QVector<ScaleDescription::Curve>::const_iterator iter = left.getCurves().begin();
+    while (iter != left.getCurves().end()) {
+        ScaleDescription::Curve c = *iter;
+
+        QCanSignalContainer & sc = (*m_CanSignals)[c.messsage];
+        QCanSignal & s = sc[c.signal];
+
+        QObject::connect(&s, SIGNAL(valueChanged(const struct timeval &, double)), this, SLOT(signalValueChanged(const struct timeval &, double)));
+
+        iter++;
+    }
+
+    m_Plotter->startRecording();
+
+    layout()->addWidget(m_Plotter);
 }
 
 void MainWindow::signalValueChanged(const struct timeval & tv, double value)
@@ -98,3 +142,4 @@ void MainWindow::signalValueChanged(const struct timeval & tv, double value)
     if (signal)
         m_Plotter->newSampleReceived(tv, value, signal->getName());
 }
+

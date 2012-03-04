@@ -20,14 +20,82 @@
  */
 
 #include <QApplication>
+#include <QxtCommandOptions>
 
 #include "MainWindow.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    QxtCommandOptions options;
 
-    MainWindow vBox;
+    options.add("help", "Show this usage");
+
+    options.add("channel",
+                "Specify physical/virtul SocketCAN channel (e.g. vcan0)",
+                QxtCommandOptions::ValueRequired);
+
+    options.add("kcd-file",
+                "Path to KCD (Kayak CAN definition file)",
+                QxtCommandOptions::ValueRequired);
+
+    options.add("busname",
+                "Name of the bus the channel belongs to (must match busname in KCD file)",
+                QxtCommandOptions::ValueRequired);
+
+    options.add("left-scale-name",
+                "Name and unit of left scale",
+                QxtCommandOptions::ValueRequired);
+
+    options.add("left-scale-signals",
+                "List of the signals to draw curve for left scale in the form of:\n"\
+                " MESSAGE.SIGNAL/COLOR,MESSAGE.SIGNAL/COLOR e.g. KSM1.ReqSpeed/red,EEC1.EngSpeed/yellow",
+                QxtCommandOptions::ValueRequired);
+
+    options.add("right-scale-name",
+                "Name and unit of right scale",
+                QxtCommandOptions::ValueRequired);
+
+    options.add("right-scale-signals",
+                "List of the signals to draw curve for right scale in the form of:\n"\
+                " MESSAGE.SIGNAL/COLOR,MESSAGE.SIGNAL/COLOR e.g. KSM1.ReqSpeed/red,EEC1.EngSpeed/yellow",
+                QxtCommandOptions::ValueRequired);
+
+    options.parse(a.arguments());
+
+    if (options.count("help") || options.showUnrecognizedWarning()) {
+        options.showUsage();
+        return -1;
+    }
+
+    if (!options.count("kcd-file")) {
+        qWarning("No signal definition file (e.g. Kayak) found");
+        return -1;
+    }
+
+    if (!options.count("busname")) {
+        qWarning("No bus name given");
+        return -1;
+    }
+
+    QString channel("can0");
+    QString kcdfile = options.value("kcd-file").toString();
+
+    if (options.count("channel"))
+        channel = options.value("channel").toString();
+
+    MainWindow vBox(channel,
+                    options.value("kcd-file").toString(),
+                    options.value("busname").toString());
+
+    ScaleDescription *left_scale = ScaleDescription::CreateScaleDescriptionFromString(
+                                    options.value("left-scale-name").toString(),
+                                    options.value("left-scale-signals").toString());
+    ScaleDescription *right_scale = ScaleDescription::CreateScaleDescriptionFromString(
+                                    options.value("right-scale-name").toString(),
+                                    options.value("right-scale-signals").toString());
+
+    vBox.addPlot(*left_scale, *right_scale);
 
     vBox.resize(600, 400);
     vBox.show();

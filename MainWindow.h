@@ -29,13 +29,43 @@
 
 #include <QRealtimePlotter.h>
 
+class ScaleDescription {
+private:
+    ScaleDescription() {}
+
+public:
+    /**
+     * Create scale description based on format string
+     * @param str e.g. MESSAGE.SIGNAL/COLOR,...
+     */
+    static ScaleDescription * CreateScaleDescriptionFromString(const QString & name, const QString & str);
+
+    const QString & getScaleName() const { return m_ScaleName; }
+
+    struct Curve {
+        QString messsage;
+        QString signal;
+        QColor color;
+    };
+
+    const QVector<struct Curve> & getCurves() const { return m_Curves; }
+
+private:
+    QString m_ScaleName;
+
+    QVector<struct Curve> m_Curves;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QObject* parent = NULL);
+    explicit MainWindow(const QString & channel, const QString & file,
+                        const QString & busname, QObject* parent = NULL);
     virtual ~MainWindow();
+
+    void addPlot(const ScaleDescription & left, const ScaleDescription & right);
 
 private slots:
     void signalValueChanged(const struct timeval & tv, double value);

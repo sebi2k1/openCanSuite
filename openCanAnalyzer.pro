@@ -13,4 +13,5 @@ SOURCES += QRealtimePlotter.cc \
     MainWindow.cc \
     main.cc
 RESOURCES += 
-LIBS += -lqwt
+LIBS += -lqwt -lQxtCore
+INCLUDEPATH += /usr/include/qxt/QxtCore

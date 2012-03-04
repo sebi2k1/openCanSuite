@@ -23,6 +23,7 @@
 #define QREALTIMEPLOTTER_H_
 
 #include <QtCore>
+#include <QTimer>
 #include <qwt/qwt_plot.h>
 #include <qwt/qwt_plot_curve.h>
 
@@ -36,6 +37,17 @@ class QRealtimePlotter : public QwtPlot
     Q_OBJECT
 
 public slots:
+    void startRecording();
+    void suspendRecording();
+
+    /**
+     * Slot to force updating of time scale to show now -> now + interval
+     */
+    void updateTimeScale();
+
+    /**
+     * Slot when a new sample was received.
+     */
     void newSampleReceived(const struct timeval & tv, double sample, const QString & source_name);
 
 public:
@@ -69,6 +81,10 @@ private:
         double timedata[MAX_SAMPLES];
         quint32 sample_count;
     } m_Curves[MAX_CURVES];
+
+    double m_Interval;
+
+    QTimer m_UpdateTimer;
 };
 
 #endif /* QREALTIMEPLOTTER_H_ */
