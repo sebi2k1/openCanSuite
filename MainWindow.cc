@@ -108,17 +108,26 @@ MainWindow::~MainWindow()
 
 void MainWindow::addScale(QRealtimePlotter::scale_t scale, const ScaleDescription & desc)
 {
-    double lower = 0.0, upper = 100.0;
+    double lower = 0.0, upper = 0.0;
 
     if (desc.getCurves().isEmpty())
         return;
 
     QVector<ScaleDescription::Curve>::const_iterator iter = desc.getCurves().begin();
     while (iter != desc.getCurves().end()) {
+        double tmp_lower = 0.0, tmp_upper = 0.0;
         ScaleDescription::Curve c = *iter;
 
         QCanSignalContainer & sc = (*m_CanSignals)[c.messsage];
         QCanSignal & s = sc[c.signal];
+
+        s.getLimit(tmp_lower, tmp_upper);
+
+        if (tmp_lower < lower)
+            tmp_lower = lower;
+
+        if (tmp_upper > upper)
+            upper = tmp_upper;
 
         m_Plotter->addCurve(scale, s, c.color);
 

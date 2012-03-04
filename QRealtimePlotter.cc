@@ -52,18 +52,17 @@ QRealtimePlotter::QRealtimePlotter(QWidget *parent) : QwtPlot(parent)
 
     QObject::connect(&m_UpdateTimer, SIGNAL(timeout()), this, SLOT(updateTimeScale()));
 
-    setFrameStyle( QFrame::NoFrame );
-    setLineWidth( 0 );
-    setCanvasLineWidth( 2 );
+    setFrameStyle(QFrame::NoFrame);
+    setLineWidth(0);
+    setCanvasLineWidth(2);
 
-    plotLayout()->setAlignCanvasToScales( true );
+    plotLayout()->setAlignCanvasToScales(true);
 
     QwtPlotGrid *grid = new QwtPlotGrid;
-    grid->setMajPen( QPen( Qt::gray, 0, Qt::DotLine ) );
-    grid->attach( this );
+    grid->setMajPen(QPen( Qt::gray, 0, Qt::DotLine));
+    grid->attach(this);
 
-    setCanvasBackground( QColor( 0, 0, 0 ) );
-
+    setCanvasBackground(QColor(0, 0, 0));
 }
 
 void QRealtimePlotter::addCurve(scale_t scale, const QObject & source, const QColor & color)
