@@ -19,6 +19,8 @@
  * IN THE SOFTWARE.
  */
 #include <qwt/qwt_scale_draw.h>
+#include <qwt/qwt_plot_grid.h>
+#include <qwt/qwt_plot_layout.h>
 #include <qwt/qwt_scale_widget.h>
 
 #include "QRealtimePlotter.h"
@@ -49,6 +51,19 @@ QRealtimePlotter::QRealtimePlotter(QWidget *parent) : QwtPlot(parent)
     setTimeScale(1000.0);
 
     QObject::connect(&m_UpdateTimer, SIGNAL(timeout()), this, SLOT(updateTimeScale()));
+
+    setFrameStyle( QFrame::NoFrame );
+    setLineWidth( 0 );
+    setCanvasLineWidth( 2 );
+
+    plotLayout()->setAlignCanvasToScales( true );
+
+    QwtPlotGrid *grid = new QwtPlotGrid;
+    grid->setMajPen( QPen( Qt::gray, 0, Qt::DotLine ) );
+    grid->attach( this );
+
+    setCanvasBackground( QColor( 0, 0, 0 ) );
+
 }
 
 void QRealtimePlotter::addCurve(scale_t scale, const QObject & source, const QColor & color)

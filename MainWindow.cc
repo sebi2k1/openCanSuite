@@ -72,7 +72,8 @@ ScaleDescription * ScaleDescription::CreateScaleDescriptionFromString(const QStr
     return sd;
 }
 
-MainWindow::MainWindow(const QString & channel, const QString & filename, const QString & busname, QObject* parent)
+MainWindow::MainWindow(const QString & channel, const QString & filename,
+                       const QString & busname, QObject* parent)
  : m_CanChannel(channel)
 {
     this->setLayout(new QVBoxLayout());
@@ -133,8 +134,6 @@ void MainWindow::addPlot(const ScaleDescription & left, const ScaleDescription &
 
     const int margin = 5;
     m_Plotter->setContentsMargins(margin, margin, margin, margin);
-
-    m_Plotter->resize(600, 400);
 
     m_Plotter->setTimeScale(5000.0);
 
