@@ -78,6 +78,8 @@ void QRealtimePlotter::changeScale(scale_t scale,
     
     setAxisScale(axis, lower_bound, upper_bound);
     setAxisTitle(axis, unit);
+
+    enableAxis(axis);
 }
 
 void QRealtimePlotter::setTimeScale(const double & interval_ms)
@@ -127,3 +129,4 @@ void QRealtimePlotter::newSampleReceived(const struct timeval & tv, double sampl
 
     replot();
 }
+

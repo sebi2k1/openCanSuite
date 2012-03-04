@@ -56,7 +56,7 @@ private:
     QVector<struct Curve> m_Curves;
 };
 
-class MainWindow : public QMainWindow
+class MainWindow : public QWidget
 {
     Q_OBJECT
 
@@ -66,6 +66,9 @@ public:
     virtual ~MainWindow();
 
     void addPlot(const ScaleDescription & left, const ScaleDescription & right);
+
+protected:
+    void addScale(QRealtimePlotter::scale_t scale, const ScaleDescription & desc);
 
 private:
     QCanChannel m_CanChannel;

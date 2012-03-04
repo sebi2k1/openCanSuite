@@ -97,7 +97,6 @@ int main(int argc, char *argv[])
 
     vBox.addPlot(*left_scale, *right_scale);
 
-    vBox.resize(600, 400);
     vBox.show();
 
     return a.exec();
