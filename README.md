@@ -7,3 +7,14 @@ behaviour of certain nodes.
 
 The project will resemble KCD file format (see Kayak project) to handled network and
 message descriptions.
+
+Installation
+==
+  $ qmake
+  $ make clean all
+
+Usage
+==
+You need to supply the CAN channel, the signal database and scale information:
+    $ openCanAnalyzer --channel vcan0 --kcd-file ./can_definition_sample.kcd --busname Motor --left-scale-name "Speed" --left-scale-signals="CruiseControlStatus.SpeedKm/red,CruiseControlStatus.SpeedKm/yellow"
+

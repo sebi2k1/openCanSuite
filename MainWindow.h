@@ -67,9 +67,6 @@ public:
 
     void addPlot(const ScaleDescription & left, const ScaleDescription & right);
 
-private slots:
-    void signalValueChanged(const struct timeval & tv, double value);
-
 private:
     QCanChannel m_CanChannel;
     QCanSignals* m_CanSignals;

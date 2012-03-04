@@ -113,10 +113,9 @@ void MainWindow::addPlot(const ScaleDescription & left, const ScaleDescription &
     m_Plotter->setTitle( "History" );
     m_Plotter->resize(600, 400);
 
-    m_Plotter->changeScale(QRealtimePlotter::E_SCALE_LEFT, 0.0, 100.0, "km/h");
     m_Plotter->setTimeScale(5000.0);
 
-    double lower = 0.0, upper = 0.0;
+    double lower = 0.0, upper = 100.0;
 
     QVector<ScaleDescription::Curve>::const_iterator iter = left.getCurves().begin();
     while (iter != left.getCurves().end()) {
@@ -125,21 +124,14 @@ void MainWindow::addPlot(const ScaleDescription & left, const ScaleDescription &
         QCanSignalContainer & sc = (*m_CanSignals)[c.messsage];
         QCanSignal & s = sc[c.signal];
 
-        QObject::connect(&s, SIGNAL(valueChanged(const struct timeval &, double)), this, SLOT(signalValueChanged(const struct timeval &, double)));
+        m_Plotter->addCurve(QRealtimePlotter::E_SCALE_LEFT, s, c.color);
 
         iter++;
     }
+    m_Plotter->changeScale(QRealtimePlotter::E_SCALE_LEFT, lower, upper, left.getScaleName());
 
     m_Plotter->startRecording();
 
     layout()->addWidget(m_Plotter);
-}
-
-void MainWindow::signalValueChanged(const struct timeval & tv, double value)
-{
-    QCanSignal *signal = static_cast<QCanSignal *>(QObject::sender());
-
-    if (signal)
-        m_Plotter->newSampleReceived(tv, value, signal->getName());
 }
 

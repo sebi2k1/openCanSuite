@@ -29,7 +29,6 @@
 
 #include <sys/time.h>
 
-#define MAX_CURVES 2
 #define MAX_SAMPLES 100000
 
 class QRealtimePlotter : public QwtPlot
@@ -48,7 +47,7 @@ public slots:
     /**
      * Slot when a new sample was received.
      */
-    void newSampleReceived(const struct timeval & tv, double sample, const QString & source_name);
+    void newSampleReceived(const struct timeval & tv, double sample);
 
 public:
     QRealtimePlotter(QWidget *parent = NULL);
@@ -56,7 +55,7 @@ public:
     typedef enum E_SCALE {
         E_SCALE_LEFT = 0,
         E_SCALE_RIGHT,
-        E_MAX_SCALE
+        E_NUM_SCALES
     } scale_t;
 
     /**
@@ -74,13 +73,22 @@ public:
      */
     void setTimeScale(const double & interval_ms);
 
+    /**
+     * Add source to given scale.
+     */
+    void addCurve(scale_t scale, const QObject & source, const QColor & color);
+
 private:
-    struct {
+    struct Curve {
         QwtPlotCurve *curve;
         double sample[MAX_SAMPLES];
         double timedata[MAX_SAMPLES];
         quint32 sample_count;
-    } m_Curves[MAX_CURVES];
+
+        QObject const * source;
+    };
+
+    QVector<struct Curve *> m_Curves[E_NUM_SCALES];
 
     double m_Interval;
 

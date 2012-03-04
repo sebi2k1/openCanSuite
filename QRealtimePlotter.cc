@@ -46,19 +46,27 @@ QRealtimePlotter::QRealtimePlotter(QWidget *parent) : QwtPlot(parent)
 
     setAxisTitle(QwtPlot::xBottom, "Time");
 
-    m_Curves[0].curve = new QwtPlotCurve();
-    m_Curves[0].curve->setRenderHint(QwtPlotItem::RenderAntialiased);
-
-    QColor c("red");
-    c.setAlpha(150);
-
-    m_Curves[0].curve->setPen(c);
-    m_Curves[0].curve->attach(this);
-    m_Curves[0].sample_count = 0;
-
     setTimeScale(1000.0);
 
     QObject::connect(&m_UpdateTimer, SIGNAL(timeout()), this, SLOT(updateTimeScale()));
+}
+
+void QRealtimePlotter::addCurve(scale_t scale, const QObject & source, const QColor & color)
+{
+    struct Curve *c = new Curve();
+
+    c->curve = new QwtPlotCurve();
+    c->curve->setRenderHint(QwtPlotItem::RenderAntialiased);
+    c->curve->setPen(color);
+    c->curve->attach(this);
+
+    c->sample_count = 0;
+    c->source = &source;
+
+    m_Curves[scale].push_back(c);
+
+    QObject::connect(&source, SIGNAL(valueChanged(const struct timeval &, double)),
+                     this, SLOT(newSampleReceived(const struct timeval &, double)));
 }
 
 void QRealtimePlotter::changeScale(scale_t scale,
@@ -98,12 +106,24 @@ void QRealtimePlotter::updateTimeScale()
     m_UpdateTimer.start(m_Interval);
 }
 
-void QRealtimePlotter::newSampleReceived(const struct timeval & tv, double sample, const QString & source_name)
+void QRealtimePlotter::newSampleReceived(const struct timeval & tv, double sample)
 {
-    m_Curves[0].sample[m_Curves[0].sample_count] = sample;
-    m_Curves[0].timedata[m_Curves[0].sample_count++] = (tv.tv_sec * 1000.0) + (tv.tv_usec / 1000.0);
+    QObject *s = QObject::sender();
+    int i;
 
-    m_Curves[0].curve->setRawSamples(&m_Curves[0].timedata[0], &m_Curves[0].sample[0], m_Curves[0].sample_count);
+    for(i = 0; i < E_NUM_SCALES; i++) {
+        struct Curve *c = NULL;
+
+        // Find curve of sender and append sample value
+        foreach(c, m_Curves[i]) {
+            if (c->source == s) {
+                c->sample[c->sample_count] = sample;
+                c->timedata[c->sample_count++] = (tv.tv_sec * 1000.0) + (tv.tv_usec / 1000.0);
+
+                c->curve->setRawSamples(&c->timedata[0], &c->sample[0], c->sample_count);
+            }
+        }
+    }
 
     replot();
 }
