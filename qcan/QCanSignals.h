@@ -116,15 +116,15 @@ public:
 
     void dispatchMessage(const QCanMessage & frame);
 
-    QCanSignal & operator[](const QString & name) {
+    QCanSignal * operator[](const QString & name) {
         QVector<QCanSignal*>::iterator iter = m_Signals.begin();
         while(iter != m_Signals.end()) {
             if ((*iter)->getName().compare(name) == 0)
-                return *(*iter);
+                return *iter;
             ++iter;
         }
 
-        // TODO: Return dummy signal without behaviour
+        return NULL;
     }
 
 private:
@@ -150,15 +150,15 @@ public:
 
     void addMessage(QCanSignalContainer* message) { m_Messages.push_back(message); }
 
-    QCanSignalContainer & operator[](const QString & name) {
+    QCanSignalContainer * operator[](const QString & name) {
         QVector<QCanSignalContainer*>::iterator iter = m_Messages.begin();
         while(iter != m_Messages.end()) {
             if ((*iter)->getName().compare(name) == 0)
-                return *(*iter);
+                return *iter;
             ++iter;
         }
 
-        // TODO: Return dummy signal without behaviour
+        return NULL;
     }
 
 private slots:

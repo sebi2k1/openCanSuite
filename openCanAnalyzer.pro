@@ -1,17 +1,5 @@
-TEMPLATE = app
-TARGET = openCanAnalyzer
-QT += core \
-    gui \
-    xml
-HEADERS += QRealtimePlotter.h \
-    qcan/QCanSignals.h \
-    qcan/QCanChannel.h \
-    MainWindow.h
-SOURCES += QRealtimePlotter.cc \
-    qcan/QCanSignals.cc \
-    qcan/QCanChannel.cc \
-    MainWindow.cc \
-    main.cc
-RESOURCES += 
-LIBS += -lqwt -lQxtCore
-INCLUDEPATH += /usr/include/qxt/QxtCore
+TEMPLATE = subdirs
+SUBDIRS = qcan canPlotter widgets
+canPlotter.depends = qcan widgets
+widgets.depends = qcan
+

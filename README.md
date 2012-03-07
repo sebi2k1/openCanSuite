@@ -16,5 +16,5 @@ Installation
 Usage
 ==
 You need to supply the CAN channel, the signal database and scale information:
-    $ openCanAnalyzer --channel vcan0 --kcd-file ./can_definition_sample.kcd --busname Motor --left-scale-name "Speed" --left-scale-signals="CruiseControlStatus.SpeedKm/red,CruiseControlStatus.SpeedKm/yellow"
+    $ canPlotter/canPlotter --channel vcan0 --kcd-file ./can_definition_sample.kcd --busname Motor --left-scale-name "Speed" --left-scale-signals="CruiseControlStatus.SpeedKm/red,CruiseControlStatus.SpeedKm/yellow"
 
