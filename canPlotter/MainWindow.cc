@@ -144,7 +144,7 @@ void MainWindow::addScale(QRealtimePlotter::scale_t scale, const ScaleDescriptio
 
 void MainWindow::addPlot(const ScaleDescription & left, const ScaleDescription & right)
 {
-    m_Plotter = new QRealtimePlotter(this);
+    m_Plotter = new QRealtimePlotter(10 * 60 * 1000 * 1000.0 /* keep 10min. in buffer */, this);
 
     const int margin = 5;
     m_Plotter->setContentsMargins(margin, margin, margin, margin);

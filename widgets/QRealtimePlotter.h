@@ -50,7 +50,11 @@ public slots:
     void newSampleReceived(const struct timeval & tv, double sample);
 
 public:
-    QRealtimePlotter(QWidget *parent = NULL);
+    /**
+     * @param buffer_time_ms Time to buffer samples. Plot will keep samples
+     * for at least buffer_time_ms
+     */
+    QRealtimePlotter(double buffer_time_ms, QWidget *parent = NULL);
 
     typedef enum E_SCALE {
         E_SCALE_LEFT = 0,
@@ -78,19 +82,26 @@ public:
      */
     void addCurve(scale_t scale, const QObject & source, const QColor & color);
 
+protected:
+    /// Delete all samples which doesn't fit into m_BufferTime_ms
+    void deleteOldSamples();
+
 private:
     struct Curve {
         QwtPlotCurve *curve;
-        double sample[MAX_SAMPLES];
-        double timedata[MAX_SAMPLES];
-        quint32 sample_count;
+        QVector<double> sample;
+        QVector<double> timedata;
 
         QObject const * source;
     };
 
     QVector<struct Curve *> m_Curves[E_NUM_SCALES];
 
+    // Visible buffer size
     double m_Interval;
+
+    // Time in ms to keep samples in buffer
+    double m_BufferTime_ms;
 
     QTimer m_UpdateTimer;
 };

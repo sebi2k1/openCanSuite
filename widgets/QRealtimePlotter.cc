@@ -36,7 +36,7 @@ public:
     }
 };
 
-QRealtimePlotter::QRealtimePlotter(QWidget *parent) : QwtPlot(parent)
+QRealtimePlotter::QRealtimePlotter(double buffer_time_ms, QWidget *parent) : QwtPlot(parent)
 {
     setAxisScaleDraw(QwtPlot::xBottom, new TimeScaleDraw());
     setAxisLabelRotation(QwtPlot::xBottom, -50.0);
@@ -63,6 +63,8 @@ QRealtimePlotter::QRealtimePlotter(QWidget *parent) : QwtPlot(parent)
     grid->attach(this);
 
     setCanvasBackground(QColor(0, 0, 0));
+
+    m_BufferTime_ms = buffer_time_ms;
 }
 
 void QRealtimePlotter::addCurve(scale_t scale, const QObject & source, const QColor & color)
@@ -74,7 +76,6 @@ void QRealtimePlotter::addCurve(scale_t scale, const QObject & source, const QCo
     c->curve->setPen(color);
     c->curve->attach(this);
 
-    c->sample_count = 0;
     c->source = &source;
 
     m_Curves[scale].push_back(c);
@@ -117,9 +118,48 @@ void QRealtimePlotter::updateTimeScale()
 
     setAxisScale(QwtPlot::xBottom, now, now + m_Interval);
 
+    deleteOldSamples();
+
     replot();
 
     m_UpdateTimer.start(m_Interval);
+}
+
+void QRealtimePlotter::deleteOldSamples()
+{
+    int i;
+
+    for(i = 0; i < E_NUM_SCALES; i++) {
+        struct Curve *c = NULL;
+
+        // Find curve of sender and append sample value
+        foreach(c, m_Curves[i]) {
+            if (c->timedata.empty())
+                continue;
+
+            double latest_sample = c->timedata.back();
+
+            QVector<double>::iterator time_iter   = c->timedata.begin();
+            QVector<double>::iterator sample_iter = c->sample.begin();
+
+            while (time_iter != c->timedata.end()) {
+                if ((latest_sample - *time_iter) > m_BufferTime_ms) {
+                    time_iter = c->timedata.erase(time_iter);
+                    sample_iter = c->sample.erase(sample_iter);
+                    continue;
+                } else {
+                    // Elements are in order if we stumble about a sample not
+                    // older than m_BufferTime_ms we can stop erasing samples.
+                    break;
+                }
+
+                ++time_iter;
+                ++sample_iter;
+            }
+
+            c->curve->setSamples(c->timedata, c->sample);
+        }
+    }
 }
 
 void QRealtimePlotter::newSampleReceived(const struct timeval & tv, double sample)
@@ -133,10 +173,10 @@ void QRealtimePlotter::newSampleReceived(const struct timeval & tv, double sampl
         // Find curve of sender and append sample value
         foreach(c, m_Curves[i]) {
             if (c->source == s) {
-                c->sample[c->sample_count] = sample;
-                c->timedata[c->sample_count++] = (tv.tv_sec * 1000.0) + (tv.tv_usec / 1000.0);
+                c->sample.push_back(sample);
+                c->timedata.push_back((tv.tv_sec * 1000.0) + (tv.tv_usec / 1000.0));
 
-                c->curve->setRawSamples(&c->timedata[0], &c->sample[0], c->sample_count);
+                c->curve->setSamples(c->timedata, c->sample);
             }
         }
     }
