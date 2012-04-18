@@ -1,5 +1,4 @@
-/Makefile.Debug
-/release
-/debug
-/Makefile
-/Makefile.Release
+moc_*
+*.o
+*.a
+Makefile

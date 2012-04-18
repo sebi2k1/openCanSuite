@@ -22,6 +22,8 @@
 #include <qwt/qwt_plot_grid.h>
 #include <qwt/qwt_plot_layout.h>
 #include <qwt/qwt_scale_widget.h>
+#include <qwt/qwt_legend.h>
+#include <qwt/qwt_legend_item.h>
 
 #include "QRealtimePlotter.h"
 
@@ -47,6 +49,12 @@ QRealtimePlotter::QRealtimePlotter(double buffer_time_ms, QWidget *parent) : Qwt
     scaleWidget->setMinBorderDist(0, fmh / 2);
 
     setAxisTitle(QwtPlot::xBottom, "Time");
+
+    QwtLegend *legend = new QwtLegend;
+    legend->setItemMode( QwtLegend::CheckableItem );
+    insertLegend( legend, QwtPlot::RightLegend );
+
+    connect( this, SIGNAL( legendChecked( QwtPlotItem *, bool ) ), SLOT( showItem( QwtPlotItem *, bool ) ) ) ;
 
     setTimeScale(1000.0);
 

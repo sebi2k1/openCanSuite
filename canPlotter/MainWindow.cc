@@ -18,11 +18,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <iostream>
+#include <QDomDocument>
+#include <qwt/qwt_slider.h>
 
 #include "MainWindow.h"
-
-#include <QDomDocument>
 
 static QDomElement findBusByName(QDomElement & docElem, const QString & name)
 {
@@ -74,7 +73,7 @@ ScaleDescription * ScaleDescription::CreateScaleDescriptionFromString(const QStr
 
 MainWindow::MainWindow(const QString & channel, const QString & filename,
                        const QString & busname, QObject* parent)
- : m_CanChannel(channel)
+ : m_CanChannel(channel), m_CanSignals(NULL)
 {
     this->setLayout(new QVBoxLayout());
 
@@ -104,6 +103,8 @@ MainWindow::MainWindow(const QString & channel, const QString & filename,
 
 MainWindow::~MainWindow()
 {
+    if(m_CanSignals)
+        delete m_CanSignals;
 }
 
 void MainWindow::addScale(QRealtimePlotter::scale_t scale, const ScaleDescription & desc)
@@ -157,5 +158,8 @@ void MainWindow::addPlot(const ScaleDescription & left, const ScaleDescription &
     m_Plotter->startRecording();
 
     layout()->addWidget(m_Plotter);
+
+//    QwtSlider *slider = new QwtSlider(this);
+   // layout()->addWidget(slider);
 }
 
