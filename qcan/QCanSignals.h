@@ -47,9 +47,13 @@ Q_DECLARE_METATYPE(struct timeval);
 class QCanSignal : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(double value
+               READ getPhysicalValue
+               NOTIFY valueHasChanged);
 
 signals:
     void valueChanged(const struct timeval & val, double value);
+    void valueHasChanged();
 
 public:
     QCanSignal(QString & name, quint8 offset, quint32 length, ENDIANESS order)
@@ -127,6 +131,8 @@ public:
         return NULL;
     }
 
+    QVector<QCanSignal*> & getSignalList() { return m_Signals; }
+
 private:
     QString m_Name;
     const quint32 m_CanId;
@@ -146,7 +152,20 @@ public:
     QCanSignals(QCanChannel* channel);
     ~QCanSignals();
 
+    /**
+     * Create CAN signals from a channel and KCD DOM bus description
+     * @param channel CAN channel to attached to
+     * @param e "bus" root level DOM element
+     */
     static QCanSignals* createFromKCD(QCanChannel* channel, const QDomElement & e);
+
+    /**
+     * Create CAN signals from a channel and KCD DOM bus description
+     * @param channel CAN channel to attached to
+     * @param kcdfile path to KCD XML file
+     * @param bus name of the bus to use defined in KCD XML file path to KCD XML file
+     */
+    static QCanSignals* createFromKCD(QCanChannel* channel, const QString & kcdfile, const QString & bus);
 
     void addMessage(QCanSignalContainer* message) { m_Messages.push_back(message); }
 
@@ -160,6 +179,8 @@ public:
 
         return NULL;
     }
+
+    QVector<QCanSignalContainer*> & getMessageList() { return m_Messages; }
 
 private slots:
     void canMessageReceived(const QCanMessage & frame);

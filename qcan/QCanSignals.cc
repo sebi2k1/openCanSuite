@@ -20,6 +20,8 @@
  */
 #include <stdint.h>
 
+#include <QFile>
+
 #include "QCanSignals.h"
 #include "QCanChannel.h"
 
@@ -95,6 +97,44 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
     }
 
     return s;
+}
+
+QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QString & kcdfile, const QString & bus)
+{
+    QDomDocument doc;
+
+    QFile file(kcdfile);
+    if (!file.open(QIODevice::ReadOnly))
+        return NULL;
+
+    if (!doc.setContent(&file)) {
+        file.close();
+        return NULL;
+    }
+
+    QDomElement docElem = doc.documentElement();
+
+    QDomNode n = docElem.firstChild();
+
+    while(!n.isNull()) {
+        if (n.nodeName().compare("Bus") == 0) {
+            QDomElement e = n.toElement();
+
+            if(!e.isNull()) {
+                if (e.attribute("name").compare(bus) == 0) {
+                    file.close();
+
+                    return createFromKCD(channel, e);
+                }
+            }
+        }
+
+        n = n.nextSibling();
+    }
+
+    file.close();
+
+    return NULL;
 }
 
 QCanSignals::QCanSignals(QCanChannel* channel) : m_CanChannel(channel)
@@ -195,7 +235,11 @@ void QCanSignal::decodeFromMessage(const QCanMessage & message)
         m_PhysicalValue = m_Upper;
 
     if (changed)
-        valueChanged(message.tv, m_PhysicalValue);
+    {
+printf("value has changed\n");
+        emit valueChanged(message.tv, m_PhysicalValue);
+        emit valueHasChanged();
+    }
 }
 
 void _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 data[8], quint64 raw_value)
