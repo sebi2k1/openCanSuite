@@ -179,35 +179,24 @@ void QCanSignalContainer::dispatchMessage(const QCanMessage & frame)
 
 static quint64 _getvalue(const quint8 * const data, quint32 offset, quint32 length, ENDIANESS byteOrder)
 {
-    quint64 d = be64toh(*((quint64 *)&data[0]));
+    quint64 d;
     quint64 o = 0;
 
-    if (byteOrder == ENDIANESS_INTEL)
-    {
-        d <<= offset;
-
-        size_t i, left = length;
-
-        for (i = 0; i < length;)
-        {
-            size_t next_shift = left >= 8 ? 8 : left;
-            size_t shift = 64 - (i + next_shift);
-            size_t m = next_shift < 8 ? 0xFF >> next_shift : 0xFF;
-
-            o |= ((d >> shift) & m) << i;
-
-            left -= 8;
-            i += next_shift;
-        }
+    if (byteOrder == ENDIANESS_INTEL) {
+        d = le64toh(*((uint64_t *)&data[0]));
+    } else {
+        d = be64toh(*((uint64_t *)&data[0]));
     }
-    else
-    {
-        quint64 m = ~Q_UINT64_C(0);
-        size_t shift = 64 - offset - 1;
 
-        m = (1 << length) - 1;
-        o = (d >> shift) & m;
+    quint64 m = (1 << length) - 1;
+    size_t shift;
+    if (byteOrder == ENDIANESS_INTEL) {
+        shift = offset;
+    } else {
+        shift = 64 - offset - length;
     }
+
+    o = (d >> shift) & m;
 
     return o;
 }
@@ -244,38 +233,30 @@ printf("value has changed\n");
 
 void _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 data[8], quint64 raw_value)
 {
-    quint64 o = be64toh(*(quint64 *)&data[0]);
+    quint64 o;
 
-    if (endianess == ENDIANESS_INTEL)
-    {
-        size_t left = bitLength;
-
-        size_t source = 0;
-
-        for (source = 0; source < bitLength; )
-        {
-            size_t next_shift = left < 8 ? left : 8;
-            size_t shift = (64 - offset - next_shift) - source;
-            quint64 m = ((1 << next_shift) - 1);
-
-            o &= ~(m << shift);
-            o |= (raw_value & m) << shift;
-
-            raw_value >>= 8;
-            source += next_shift;
-            left -= next_shift;
-        }
-    }
-    else
-    {
-        quint64 m = ((1 << bitLength) - 1);
-        size_t shift = 64 - offset - 1;
-
-        o &= ~(m << shift);
-        o |= (raw_value & m) << shift;
+    if (endianess == ENDIANESS_INTEL) {
+        o = le64toh(*((uint64_t *)&data[0]));
+    } else {
+        o = be64toh(*((uint64_t *)&data[0]));
     }
 
-    o = htobe64(o);
+    quint64 m = ((1 << bitLength) - 1);
+    size_t shift;
+    if (endianess == ENDIANESS_INTEL) {
+        shift = offset;
+    } else {
+        shift = 64 - offset - bitLength;
+    }
+
+    o &= ~(m << shift);
+    o |= (raw_value & m) << shift;
+
+    if (endianess == ENDIANESS_INTEL) {
+        o = htole64(o);
+    } else {
+        o = htobe64(o);
+    }
 
     memcpy(&data[0], &o, 8);
 }
