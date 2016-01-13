@@ -1,5 +1,4 @@
-var can = require('can');
-var signals = require('can_signals');
+var can = require('socketcan');
 var fs = require('fs');
 
 var channel = can.createRawChannel("vcan0");
@@ -7,16 +6,18 @@ var channel = can.createRawChannel("vcan0");
 channel.start();
 
 // Parse database
-var network = signals.parseNetworkDescription("../../can_definition_sample.kcd");
+var network = can.parseNetworkDescription("../../can_definition_sample.kcd");
 
 // Create new DB service an pass database
-var dbService = new signals.DatabaseService(channel, network.buses['Motor'].messages);
+var db = new can.DatabaseService(channel, network.buses['Motor']);
 
 // Register change listener (we also receive self-made changes)
-dbService.messages['CruiseControlStatus'].signals['SpeedKm'].onChange(function(signal) { console.log("Value " + signal.value); });
+db.messages['CruiseControlStatus'].signals['SpeedKm'].onChange(function(s) {
+   console.log("SpeedKm " + s.value);
+});
 
 // Increment power::klemme15 every 100ms
 setInterval(function() {
-	dbService.messages['CruiseControlStatus'].signals['SpeedKm'].update(dbService.messages['CruiseControlStatus'].signals['SpeedKm'].value + 2);
-	dbService.send('CruiseControlStatus');
-}, 100)
+	db.messages['CruiseControlStatus'].signals['SpeedKm'].update(db.messages['CruiseControlStatus'].signals['SpeedKm'].value + 1);
+	db.send('CruiseControlStatus');
+}, 250)
