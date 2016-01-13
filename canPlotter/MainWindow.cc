@@ -19,6 +19,7 @@
  * IN THE SOFTWARE.
  */
 #include <QDomDocument>
+#include <QVBoxLayout>
 #include <qwt/qwt_slider.h>
 
 #include "MainWindow.h"

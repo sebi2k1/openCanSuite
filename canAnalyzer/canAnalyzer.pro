@@ -2,10 +2,11 @@ TEMPLATE = app
 TARGET = canAnalyzer
 QT += core \
     gui \
+    widgets \
     xml
 HEADERS += MainWindow.h 
 SOURCES += main.cc MainWindow.cc
 FORMS += mainwindow.ui
 RESOURCES +=
-LIBS += -L../qcan -lqcan -L../widgets -lwidgets -lqwt -lQxtCore 
-INCLUDEPATH += /usr/include/qxt/QxtCore ../qcan ../widgets
+LIBS += -L../qcan -lqcan
+INCLUDEPATH += ../qcan

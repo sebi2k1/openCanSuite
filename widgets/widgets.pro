@@ -3,8 +3,8 @@ CONFIG += staticlib
 TARGET = widgets
 QT += core \
       gui\
+      widgets\
       xml
 HEADERS += QRealtimePlotter.h
 SOURCES += QRealtimePlotter.cc
-LIBS += -lqwt -lQxtCore
-INCLUDEPATH += /usr/include/qxt/QxtCore
+LIBS += -lqwt-qt5

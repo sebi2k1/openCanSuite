@@ -2,10 +2,11 @@ TEMPLATE = app
 TARGET = canPlotter
 QT += core \
     gui \
+    widgets \
     xml
 HEADERS += MainWindow.h
 SOURCES += MainWindow.cc \
            main.cc
 RESOURCES +=
-LIBS += -L../qcan -lqcan -L../widgets -lwidgets -lqwt -lQxtCore 
-INCLUDEPATH += /usr/include/qxt/QxtCore ../qcan ../widgets
+LIBS += -L../qcan -lqcan -L../widgets -lwidgets -lqwt-qt5
+INCLUDEPATH += ../qcan ../widgets
