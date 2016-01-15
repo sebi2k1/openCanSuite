@@ -278,7 +278,6 @@ Rectangle {
             {
                 rpmValue = 60;
                 speedValue = speedValue - 3
-                indicatorflash.running = true
                 gear = 4
             }
             rpmValue = rpmValue + 1.5
