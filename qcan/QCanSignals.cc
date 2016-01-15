@@ -57,7 +57,7 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
 
                        name = signalElem.attribute("name");
                        quint32 offset = signalElem.attribute("offset").toLong();
-                       quint32 length = signalElem.attribute("length").toLong();
+                       quint32 length = signalElem.attribute("length", "1").toLong();
                        ENDIANESS order = signalElem.attribute("endianess", "little").compare("little") == 0 ? ENDIANESS_INTEL : ENDIANESS_MOTOROLA;
 
                        QCanSignal * signal = new QCanSignal(name, offset, length, order);
