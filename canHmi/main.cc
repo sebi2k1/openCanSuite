@@ -21,9 +21,9 @@
 
 #include <QApplication>
 #include <QDebug>
-#include <QDeclarativeView>
-#include <QDeclarativeContext>
-#include <QxtCommandOptions>
+#include <QQuickView>
+#include <QQmlContext>
+#include <QCommandLineParser>
 
 #include <QCanChannel.h>
 #include <QCanSignals.h>
@@ -55,45 +55,41 @@ static void CreateBusChannelMappingFromString(const QString & str, bus_channel_m
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QxtCommandOptions options;
+    QCommandLineParser parser;
 
-    options.add("help", "Show this usage");
+    parser.addHelpOption();
 
-    options.add("bus-channel-mapping",
-                "List of bus/channel mappings, e.g.: vcan0=Motor,vcan2=Machine",
-                QxtCommandOptions::ValueRequired);
+    QCommandLineOption busChannelMappingOption ("bus-channel-mapping",
+                "List of bus/channel mappings, e.g.: vcan0=Motor,vcan2=Machine", "mapping");
+    parser.addOption(busChannelMappingOption);
 
-    options.add("kcd-file",
-                "Path to KCD (Kayak CAN definition file)",
-                QxtCommandOptions::ValueRequired);
+    QCommandLineOption kcdFileOption("kcd-file",
+                "Path to KCD (Kayak CAN definition file)", "file");
+    parser.addOption(kcdFileOption);
 
-    options.add("qml-file",
-                "Path to local file which describes the HMI view",
-                QxtCommandOptions::ValueRequired);
+    QCommandLineOption qmlFileOption("qml-file",
+                "Path to local file which describes the HMI view", "file");
+    parser.addOption(qmlFileOption);
 
-    options.parse(a.arguments());
+    parser.process(a);
 
-    if (options.count("help") || options.showUnrecognizedWarning()) {
-        options.showUsage();
-        return -1;
-    }
-
-    if (!options.count("kcd-file")) {
+    if (!parser.isSet(kcdFileOption)) {
         qWarning("No signal definition file (e.g. Kayak) found");
         return -1;
     }
 
-    if (!options.count("bus-channel-mapping")) {
+    if (!parser.isSet(busChannelMappingOption)) {
         qWarning("No bus/channel mapping given");
         return -1;
     }
 
     QString mappingstr("");
-    QString kcdfile = options.value("kcd-file").toString();
-    QString qmlfile = options.value("qml-file").toString();
+    QString kcdfile = parser.value(kcdFileOption);
+    QString qmlfile = parser.value(qmlFileOption);
 
-    if (options.count("bus-channel-mapping"))
-        mappingstr = options.value("bus-channel-mapping").toString();
+    if (parser.isSet(busChannelMappingOption)) {
+        mappingstr = parser.value(busChannelMappingOption);
+    }
 
     bus_channel_map_t map;
 
@@ -103,7 +99,7 @@ int main(int argc, char *argv[])
     // Start all CAN channels and attached signal definitions to busses
     struct bus_channel_mapping m;
 
-    QDeclarativeView view;
+    QQuickView view;
 
     foreach(m, map) {
         QCanChannel *c = new QCanChannel(m.channel);

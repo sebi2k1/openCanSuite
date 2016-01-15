@@ -23,7 +23,7 @@
 #include <qwt/qwt_plot_layout.h>
 #include <qwt/qwt_scale_widget.h>
 #include <qwt/qwt_legend.h>
-#include <qwt/qwt_legend_item.h>
+#include <qwt/qwt_legend_data.h>
 
 #include "QRealtimePlotter.h"
 
@@ -51,7 +51,7 @@ QRealtimePlotter::QRealtimePlotter(double buffer_time_ms, QWidget *parent) : Qwt
     setAxisTitle(QwtPlot::xBottom, "Time");
 
     QwtLegend *legend = new QwtLegend;
-    legend->setItemMode( QwtLegend::CheckableItem );
+    legend->setDefaultItemMode( QwtLegendData::Checkable );
     insertLegend( legend, QwtPlot::RightLegend );
 
     connect( this, SIGNAL( legendChecked( QwtPlotItem *, bool ) ), SLOT( showItem( QwtPlotItem *, bool ) ) ) ;
@@ -62,12 +62,12 @@ QRealtimePlotter::QRealtimePlotter(double buffer_time_ms, QWidget *parent) : Qwt
 
     setFrameStyle(QFrame::NoFrame);
     setLineWidth(0);
-    setCanvasLineWidth(2);
+    ((QFrame *)canvas())->setLineWidth(2);
 
     plotLayout()->setAlignCanvasToScales(true);
 
     QwtPlotGrid *grid = new QwtPlotGrid;
-    grid->setMajPen(QPen( Qt::gray, 0, Qt::DotLine));
+    grid->setMajorPen(QPen( Qt::gray, 0, Qt::DotLine));
     grid->attach(this);
 
     setCanvasBackground(QColor(0, 0, 0));

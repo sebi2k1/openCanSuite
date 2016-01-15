@@ -2,9 +2,10 @@ TEMPLATE = app
 TARGET = canHmi
 QT += core \
     gui \
-    declarative \
+    quick \
+    widgets \
     xml
 SOURCES += main.cc
 RESOURCES +=
-LIBS += -L../qcan -lqcan -lQxtCore 
-INCLUDEPATH += /usr/include/qxt/QxtCore ../qcan
+LIBS += -L../qcan -lqcan
+INCLUDEPATH += ../qcan

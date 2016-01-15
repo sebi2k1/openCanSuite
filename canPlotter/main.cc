@@ -20,80 +20,86 @@
  */
 
 #include <QApplication>
-#include <QxtCommandOptions>
+#include <QCommandLineParser>
 
 #include "MainWindow.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QxtCommandOptions options;
+    QCommandLineParser parser;
 
-    options.add("help", "Show this usage");
+    parser.addHelpOption();
 
-    options.add("channel",
-                "Specify physical/virtul SocketCAN channel (e.g. vcan0)",
-                QxtCommandOptions::ValueRequired);
+    QCommandLineOption channelOption ("channel",
+                "Specify physical/virtul SocketCAN channel (e.g. vcan0)", "channel");
+    parser.addOption(channelOption);
 
-    options.add("kcd-file",
-                "Path to KCD (Kayak CAN definition file)",
-                QxtCommandOptions::ValueRequired);
+    QCommandLineOption kcdFileOption("kcd-file",
+                "Path to KCD (Kayak CAN definition file)", "file");
+    parser.addOption(kcdFileOption);
 
-    options.add("busname",
-                "Name of the bus the channel belongs to (must match busname in KCD file)",
-                QxtCommandOptions::ValueRequired);
+    QCommandLineOption busnameOption("busname",
+                "Name of the bus the channel belongs to (must match busname in KCD file)", "busname");
+    parser.addOption(busnameOption);
 
-    options.add("left-scale-name",
+    QCommandLineOption leftScaleNameOption("left-scale-name",
                 "Name and unit of left scale",
-                QxtCommandOptions::ValueRequired);
+                "scale-name");
+    parser.addOption(leftScaleNameOption);
 
-    options.add("left-scale-signals",
+    QCommandLineOption leftScaleSignalsOption("left-scale-signals",
                 "List of the signals to draw curve for left scale in the form of:\n"\
                 " MESSAGE.SIGNAL/COLOR,MESSAGE.SIGNAL/COLOR e.g. KSM1.ReqSpeed/red,EEC1.EngSpeed/yellow",
-                QxtCommandOptions::ValueRequired);
+                "scale-signals");
+    parser.addOption(leftScaleSignalsOption);
 
-    options.add("right-scale-name",
+    QCommandLineOption rightScaleNameOption("right-scale-name",
                 "Name and unit of right scale",
-                QxtCommandOptions::ValueRequired);
+                "scale-name");
+    parser.addOption(rightScaleNameOption);
 
-    options.add("right-scale-signals",
+    QCommandLineOption rightScaleSignalsOption("right-scale-signals",
                 "List of the signals to draw curve for right scale in the form of:\n"\
                 " MESSAGE.SIGNAL/COLOR,MESSAGE.SIGNAL/COLOR e.g. KSM1.ReqSpeed/red,EEC1.EngSpeed/yellow",
-                QxtCommandOptions::ValueRequired);
+                "scale-signals");
+    parser.addOption(rightScaleSignalsOption);
 
-    options.parse(a.arguments());
+    parser.process(a);
 
-    if (options.count("help") || options.showUnrecognizedWarning()) {
-        options.showUsage();
-        return -1;
-    }
-
-    if (!options.count("kcd-file")) {
+    if (!parser.isSet(kcdFileOption)) {
         qWarning("No signal definition file (e.g. Kayak) found");
         return -1;
     }
 
-    if (!options.count("busname")) {
+    if (!parser.isSet(busnameOption)) {
         qWarning("No bus name given");
         return -1;
     }
 
     QString channel("can0");
-    QString kcdfile = options.value("kcd-file").toString();
+    QString kcdfile = parser.value(kcdFileOption);
+    QString busname = parser.value(busnameOption);
 
-    if (options.count("channel"))
-        channel = options.value("channel").toString();
+    if (parser.isSet(channelOption)) {
+        channel = parser.value(channelOption);
+    }
+
+    QString leftScaleName = parser.value(leftScaleNameOption);
+    QString leftScaleSignals = parser.value(leftScaleSignalsOption);
+    QString rightScaleName = parser.value(rightScaleNameOption);
+    QString rightScaleSignals = parser.value(rightScaleSignalsOption);
 
     MainWindow vBox(channel,
-                    options.value("kcd-file").toString(),
-                    options.value("busname").toString());
+                    kcdfile,
+                    busname);
 
     ScaleDescription *left_scale = ScaleDescription::CreateScaleDescriptionFromString(
-                                    options.value("left-scale-name").toString(),
-                                    options.value("left-scale-signals").toString());
+                                    leftScaleName,
+                                    leftScaleSignals);
     ScaleDescription *right_scale = ScaleDescription::CreateScaleDescriptionFromString(
-                                    options.value("right-scale-name").toString(),
-                                    options.value("right-scale-signals").toString());
+                                    rightScaleName,
+                                    rightScaleSignals);
 
     vBox.addPlot(*left_scale, *right_scale);
 
