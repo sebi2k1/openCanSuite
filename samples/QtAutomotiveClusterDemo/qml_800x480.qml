@@ -44,7 +44,7 @@ Rectangle {
 
     // parent rectangle
     id: rectangle1
-    property  bool startFlag: false
+    property  bool startFlag: true
     property real dialOpacity : 0
     property real  rpmValue: 0
     property real  speedValue: 0
@@ -91,24 +91,12 @@ Rectangle {
     // start dial glowing effect
     ParallelAnimation{
         id: dialEffectStart
-        running: false
+        running: true
         NumberAnimation{target: speed_active; property:  "opacity"; to: 1.0; duration: 1000}
         NumberAnimation{target: rpm_active; property:  "opacity"; to: 1.0; duration: 1000}
-        NumberAnimation{target: totalDistance; property: "opacity"; to: 1.0; duration: 1000}
         NumberAnimation{target: digitRectangle; property: "opacity"; to: 1.0; duration: 1000}
         NumberAnimation{target: line; property: "opacity"; to: 1.0; duration: 1000}
 
-        NumberAnimation{target: totalDistance; property: "x"; to: 27; duration: 800}
-        NumberAnimation{target: totalDistance; property: "y"; to: 400; duration: 800}
-        NumberAnimation{target: destination; property: "opacity"; to: 1.0; duration: 1000}
-        NumberAnimation{target: destination; property: "x"; to: 200; duration: 800}
-        NumberAnimation{target: destination; property: "y"; to: 400; duration: 800}
-        NumberAnimation{target: time; property: "opacity"; to: 1.0; duration: 1000}
-        NumberAnimation{target: time; property: "x"; to: 400; duration: 800}
-        NumberAnimation{target: time; property: "y"; to: 400; duration: 800}
-        NumberAnimation{target: date; property: "opacity"; to: 1.0; duration: 1000}
-        NumberAnimation{target: date; property: "x"; to: 600; duration: 800}
-        NumberAnimation{target: date; property: "y"; to: 400; duration: 800}
         NumberAnimation{target: turn_left; property: "opacity"; to: 0.1; duration: 800}
         NumberAnimation{target: turn_right; property: "opacity"; to: 0.1; duration: 800}
 
@@ -142,7 +130,7 @@ Rectangle {
     // decrease all indicators opacity
     SequentialAnimation{
         id: indicatorAnimatedDim
-        running: false
+        running: true
         NumberAnimation{ target:straightBeam; property: "opacity"; to: 0.2; duration: 100}
         NumberAnimation{ target:oilIndication; property: "opacity"; to: 0.2; duration: 100}
         NumberAnimation{ target:battery_low; property: "opacity"; to: 0.2; duration: 100 }
@@ -164,6 +152,29 @@ Rectangle {
 
     }
 
+    SequentialAnimation{
+        id: parkingLightOn
+        running: Instrumentation_Headlights_Fog.value ? true : false
+        NumberAnimation{ target:parkingLight; property: "opacity"; to: 1; duration: 100 }
+    }
+
+    SequentialAnimation{
+        id: parkingLightOff
+        running: Instrumentation_Headlights_Fog.value ? false : true
+        NumberAnimation{ target:parkingLight; property: "opacity"; to: 0.2; duration: 100 }
+    }
+
+    SequentialAnimation{
+        id: highBeamOn
+        running: Instrumentation_Headlights_High.value ? true : false
+        NumberAnimation{ target:straightBeam; property: "opacity"; to: 1; duration: 100}
+    }
+
+    SequentialAnimation{
+        id: highBeamOff
+        running: Instrumentation_Headlights_High.value ? false : true
+        NumberAnimation{ target:straightBeam; property: "opacity"; to: 0.2; duration: 100}
+    }
 
     //feed dummy data for indication and warning message
     SequentialAnimation{
@@ -227,6 +238,14 @@ Rectangle {
         NumberAnimation{target: turn_left; property: "opacity"; to: 0.1; duration: 150}
     }
 
+    SequentialAnimation{
+        id: leftIndicatorOnOff
+        running: false
+        NumberAnimation{target: turn_left; property: "opacity"; to: 1; duration: 150}
+        NumberAnimation{duration: 300}
+        NumberAnimation{target: turn_left; property: "opacity"; to: 0.1; duration: 150}
+    }
+
     // right turn indicator on with opacity control
     SequentialAnimation{
         id: rightIndicatorOn
@@ -236,6 +255,14 @@ Rectangle {
     SequentialAnimation{
         id: rightIndicatorOff
         running: false
+        NumberAnimation{target: turn_right; property: "opacity"; to: 0.1; duration: 150}
+    }
+
+    SequentialAnimation{
+        id: rightIndicatorOnOff
+        running: false
+        NumberAnimation{target: turn_right; property: "opacity"; to: 1; duration: 150}
+        NumberAnimation{duration: 300}
         NumberAnimation{target: turn_right; property: "opacity"; to: 0.1; duration: 150}
     }
 
@@ -316,31 +343,22 @@ Rectangle {
 
     Timer{
         id: leftTurn
-        interval: 300
-        running: false
+        interval: 900
+        running: Instrumentation_Headlights_Turnsignal_L.value ? true : false
         repeat: true
         onTriggered: {
-            if(turn_leftFlag ==  false){
-            leftIndicatorOn.start()}
-            if(turn_leftFlag == true){
-                leftIndicatorOff.start()}
-            turn_leftFlag = !turn_leftFlag
+            leftIndicatorOnOff.start()
         }
-
     }
 
 
     Timer{
         id: rightTurn
-        interval: 300
-        running: false
+        interval: 900
+        running: Instrumentation_Headlights_Turnsignal_R.value ? true : false
         repeat: true
         onTriggered: {
-            if(turn_rightFlag ==  false){
-            rightIndicatorOn.start()}
-            if(turn_rightFlag == true){
-                rightIndicatorOff.start()}
-            turn_rightFlag = !turn_rightFlag
+            rightIndicatorOnOff.start()
         }
 
     }
@@ -356,7 +374,7 @@ Rectangle {
         anchors.verticalCenterOffset: 8
         anchors.horizontalCenterOffset: -207
         anchors.centerIn: parent
-       // value: slider.x * 100 / (container.width - 34)
+	value: Motor_CruiseControlStatus_SpeedKm.value
 
         Image {
             id: rpmOverlay
@@ -373,7 +391,7 @@ Rectangle {
         id: speed_dial
         x: 477
         y: 86
-        value: 0
+	value: Motor_CruiseControlStatus_SpeedKm.value
         z: 7
         opacity: 1
         anchors.verticalCenterOffset: -4
@@ -398,20 +416,7 @@ Rectangle {
         x: 321
         y: 110
         smooth: true
-        value: fuelValue
-        Timer{
-            id:f_meter
-            interval: 7000
-            running: true
-            repeat: true
-            onTriggered: {
-                     if(fuelValue > 59){fuelValue = 1}
-                     if(fuelValue > 0 ){
-                     fuelValue = fuelValue - 1
-                     fuelMeter1.value = fuelValue}
-
-            }
-        }
+        value: Instrumentation_TankController_TankLevel.value
     }
     // engine start and stop button with flipable property
     Flipable {
@@ -459,9 +464,6 @@ Rectangle {
                      dialEffectStop.stop()                      // stop dial animation
                      dialEffectStart.start()                    // start dial effect animation
                      indicatorAnimatedDim.start()               // startindictor effect animation
-                     rpmAndspeedUpdate.running = true           // start rpmAndspeedUpdate timer
-                     digitalSpeedUpdate.running = true          // start digitalSpeedUpdate timer
-                     dummyAnimation.start()
                  }
                  if(startFlag == false)
                  {
@@ -469,19 +471,6 @@ Rectangle {
                      indicatorAnimatedDim.stop()                // stop indicator animation
                      indicatorAnimateFocus.start()              // start indicator focus annimation
                      dialEffectStop.start()                     // start dial effect stop animation
-                     rpmAndspeedUpdate.running = false
-                     digitalSpeedUpdate.running = true
-                     dummyAnimation.stop()
-                      leftTurn.running = false
-                     rightTurn.running = false
-                     rpm_dial.value = 0
-                     speed_dial.value = 0
-                     rpmValue = 0
-                     speedValue = 0
-                     oil.visible = 0
-                     fuelLeak.visible = 0
-                     brake.visible = 0
-                     battery.visible = 0
                  }
 
                 rpmOverlay.visible = startFlag
@@ -745,7 +734,7 @@ Rectangle {
         id: digitalSpeed
         y: -1
         color: "#03bee7"
-        text: speedValue
+        text: (Motor_CruiseControlStatus_SpeedKm.value + (2 * Motor_CruiseControlStatus_SpeedKm.value/10)).toFixed(1)
         smooth: true
         anchors.left: parent.left
         anchors.leftMargin: 15
