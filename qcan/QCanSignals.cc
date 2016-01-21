@@ -47,6 +47,8 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
 
                QCanSignalContainer *sc = new QCanSignalContainer(name, id, ext);
 
+               QObject::connect(sc, SIGNAL(canMessageSend(const QCanMessage &)), channel, SLOT(canMessageSend(const QCanMessage &)));
+
                // Find all "Signal" nodes
                for (QDomNode signalNode = messageElem.firstChild(); !signalNode.isNull(); signalNode = signalNode.nextSibling()) {
                    if (signalNode.nodeName().compare("Signal") == 0) {
@@ -61,6 +63,8 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
                        ENDIANESS order = signalElem.attribute("endianess", "little").compare("little") == 0 ? ENDIANESS_INTEL : ENDIANESS_MOTOROLA;
 
                        QCanSignal * signal = new QCanSignal(name, offset, length, order);
+
+                       QObject::connect(signal, SIGNAL(canMessageDataSend(QCanMessage &)), sc, SLOT(canMessageDataSend(QCanMessage &)));
 
                        for (QDomNode valueNode = signalElem.firstChild(); !valueNode.isNull(); valueNode = valueNode.nextSibling()) {
                            if (valueNode.nodeName().compare("Value") == 0) {
@@ -201,6 +205,15 @@ static quint64 _getvalue(const quint8 * const data, quint32 offset, quint32 leng
     return o;
 }
 
+void QCanSignal::setPhysicalValue(double val)
+{
+    QCanMessage message;
+
+    m_PhysicalValue = val;
+    encodeToMessage(message);
+    canMessageDataSend(message);
+}
+
 void QCanSignal::decodeFromMessage(const QCanMessage & message)
 {
     quint64 value = _getvalue(&message.data[0], m_Offset, m_Length, m_Order);
@@ -258,4 +271,19 @@ void _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 da
     }
 
     memcpy(&data[0], &o, 8);
+}
+
+void QCanSignal::encodeToMessage(QCanMessage & message)
+{
+    m_RawValue = (quint64)((m_PhysicalValue - m_Intercept) / m_Slope);
+
+    _setvalue(m_Offset, m_Length, m_Order, &message.data[0], m_RawValue);
+}
+
+void QCanSignalContainer::canMessageDataSend(QCanMessage & message)
+{
+    message.isExt = m_IsExt;
+    message.id = m_CanId;
+
+    canMessageSend(message);
 }
