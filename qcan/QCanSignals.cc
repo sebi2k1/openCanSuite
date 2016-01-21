@@ -64,7 +64,7 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
 
                        QCanSignal * signal = new QCanSignal(name, offset, length, order);
 
-                       QObject::connect(signal, SIGNAL(canMessageDataSend(QCanMessage &)), sc, SLOT(canMessageDataSend(QCanMessage &)));
+                       QObject::connect(signal, SIGNAL(canMessageValueSend(quint32, quint32, ENDIANESS, quint64)), sc, SLOT(canMessageValueSend(quint32, quint32, ENDIANESS, quint64)));
 
                        for (QDomNode valueNode = signalElem.firstChild(); !valueNode.isNull(); valueNode = valueNode.nextSibling()) {
                            if (valueNode.nodeName().compare("Value") == 0) {
@@ -168,6 +168,7 @@ void QCanSignals::canMessageReceived(const QCanMessage & frame)
 void QCanSignalContainer::dispatchMessage(const QCanMessage & frame)
 {
     if (frame.id == m_CanId && frame.isExt == frame.isExt) {
+        ::memcpy(&m_Data[0], &frame.data[0], 8);
         QVector<QCanSignal*>::iterator iter = m_Signals.begin();
 
         while(iter != m_Signals.end())
@@ -207,11 +208,11 @@ static quint64 _getvalue(const quint8 * const data, quint32 offset, quint32 leng
 
 void QCanSignal::setPhysicalValue(double val)
 {
-    QCanMessage message;
-
     m_PhysicalValue = val;
-    encodeToMessage(message);
-    canMessageDataSend(message);
+
+    m_RawValue = (quint64)((m_PhysicalValue - m_Intercept) / m_Slope);
+
+    canMessageValueSend(m_Offset, m_Length, m_Order, m_RawValue);
 }
 
 void QCanSignal::decodeFromMessage(const QCanMessage & message)
@@ -243,15 +244,17 @@ void QCanSignal::decodeFromMessage(const QCanMessage & message)
     }
 }
 
-void _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 data[8], quint64 raw_value)
+bool _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 data[8], quint64 raw_value)
 {
     quint64 o;
+    quint64 orig;
 
     if (endianess == ENDIANESS_INTEL) {
         o = le64toh(*((uint64_t *)&data[0]));
     } else {
         o = be64toh(*((uint64_t *)&data[0]));
     }
+    orig = o;
 
     quint64 m = ((1 << bitLength) - 1);
     size_t shift;
@@ -270,20 +273,20 @@ void _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 da
         o = htobe64(o);
     }
 
+    if(o == orig) return false;
+
     memcpy(&data[0], &o, 8);
+
+    return true;
 }
 
-void QCanSignal::encodeToMessage(QCanMessage & message)
+void QCanSignalContainer::canMessageValueSend(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint64 value)
 {
-    m_RawValue = (quint64)((m_PhysicalValue - m_Intercept) / m_Slope);
-
-    _setvalue(m_Offset, m_Length, m_Order, &message.data[0], m_RawValue);
-}
-
-void QCanSignalContainer::canMessageDataSend(QCanMessage & message)
-{
-    message.isExt = m_IsExt;
-    message.id = m_CanId;
-
-    canMessageSend(message);
+    if(_setvalue(offset, bitLength, endianess, &m_Data[0], value)) {
+        QCanMessage message;
+        message.isExt = m_IsExt;
+        message.id = m_CanId;
+        ::memcpy(&message.data[0], &m_Data[0], 8);
+        canMessageSend(message);
+    }
 }

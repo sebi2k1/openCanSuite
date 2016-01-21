@@ -55,7 +55,7 @@ class QCanSignal : public QObject
 signals:
     void valueChanged(const struct timeval & val, double value);
     void valueHasChanged();
-    void canMessageDataSend(QCanMessage & frame);
+    void canMessageValueSend(quint32, quint32, ENDIANESS, quint64);
 
 public:
     QCanSignal(QString & name, quint8 offset, quint32 length, ENDIANESS order)
@@ -77,7 +77,6 @@ public:
     }
 
     void decodeFromMessage(const QCanMessage & message);
-    void encodeToMessage(QCanMessage & message);
 
     double getPhysicalValue() { return m_PhysicalValue; }
     void setPhysicalValue(double val);
@@ -114,7 +113,7 @@ class QCanSignalContainer : public QObject
 
 public:
     QCanSignalContainer(QString & name, quint32 id, bool isExt)
-     : m_Name(name), m_CanId(id), m_IsExt(isExt) {}
+     : m_Name(name), m_CanId(id), m_IsExt(isExt), m_Data() {}
     ~QCanSignalContainer() {}
 
     const QString & getName() { return m_Name; }
@@ -140,12 +139,13 @@ signals:
     void canMessageSend(const QCanMessage & frame);
 
 private slots:
-    void canMessageDataSend(QCanMessage & frame);
+    void canMessageValueSend(quint32, quint32, ENDIANESS, quint64);
 
 private:
     QString m_Name;
     const quint32 m_CanId;
     const bool m_IsExt;
+    quint8 m_Data[8];
 
     QVector<QCanSignal*> m_Signals;
 };
