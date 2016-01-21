@@ -42,7 +42,7 @@ QCanChannel::QCanChannel(const QString & name)
         strcpy(ifr.ifr_name, name.toStdString().c_str());
         ioctl(m_SocketFd, SIOCGIFINDEX, &ifr);
 
-        m_SocketAddr.can_family = PF_CAN;
+        m_SocketAddr.can_family = AF_CAN;
         m_SocketAddr.can_ifindex = ifr.ifr_ifindex;
 
         if (bind(m_SocketFd, (struct sockaddr *)&m_SocketAddr, sizeof(m_SocketAddr)) < 0) {
