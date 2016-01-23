@@ -63,7 +63,7 @@ Rectangle {
 
     x: 0
     y: 0
-    width: 800
+    width: 1280
     height: 480
     radius: 0
     gradient: Gradient {
@@ -366,20 +366,17 @@ Rectangle {
     // rpm dial object from RpmDial qml
     RpmDial  {
         id: rpm_dial
-        x: 43
-        y: 98
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+        anchors.leftMargin: 50
         visible: true
         z: 7
         opacity: 1
-        anchors.verticalCenterOffset: 8
-        anchors.horizontalCenterOffset: -207
-        anchors.centerIn: parent
-	value: Motor_CruiseControlStatus_SpeedKm.value
+        value: Motor_CruiseControlStatus_SpeedKm.value
 
         Image {
             id: rpmOverlay
-            x: 123
-            y: 129
+            anchors.centerIn: parent
             z: 7
             opacity: 1
             source: "pics/overlay_active.png"
@@ -389,21 +386,16 @@ Rectangle {
     // speed dial import from speedDial qml
     SpeedDial  {
         id: speed_dial
-        x: 477
-        y: 86
-	value: Motor_CruiseControlStatus_SpeedKm.value
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        anchors.rightMargin: 50
         z: 7
+        value: Motor_CruiseControlStatus_SpeedKm.value
         opacity: 1
-        anchors.verticalCenterOffset: -4
-        anchors.horizontalCenterOffset: 227
-        anchors.centerIn: parent
-        //value: slider.x * 100 / (container.width - 34)
-        //value: 50
 
         Image {
             id: speedOverlay
-            x: 123
-            y: 137
+            anchors.centerIn: parent
             z: 7
             opacity: 1
             source: "pics/overlay_active.png"
@@ -413,7 +405,7 @@ Rectangle {
      // Fuel meter indicator from FuelMeter qml
     FuelMeter {
         id: fuelMeter1
-        x: 321
+        anchors.horizontalCenter: parent.horizontalCenter
         y: 110
         smooth: true
         value: Instrumentation_TankController_TankLevel.value
@@ -426,7 +418,7 @@ Rectangle {
          z: 7
 
          property bool flipped: false
-         x: 375
+         anchors.horizontalCenter: parent.horizontalCenter
          y: 311
 
          front: Image { source: "pics/Engine_start_stop_inactive.png"; anchors.centerIn: parent }
@@ -481,8 +473,7 @@ Rectangle {
 
     Image {
          id: rpm_active
-         x: 22
-         y: 79
+         anchors.centerIn: rpm_dial
          z: 11
          opacity: 0
          visible: true
@@ -491,8 +482,7 @@ Rectangle {
 
     Image {
          id: speed_active
-         x: 457
-         y: 75
+         anchors.centerIn: speed_dial
          z: 12
          opacity: 0
          visible: true
@@ -501,6 +491,8 @@ Rectangle {
     Image {
         id: turn_left
         x: 335
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.horizontalCenterOffset: -65
         y: 208
         smooth: true
         z: 6
@@ -509,7 +501,8 @@ Rectangle {
 
     Image {
         id: turn_right
-        x: 419
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.horizontalCenterOffset: 65
         y: 208
         smooth: true
         z: 6
@@ -527,7 +520,8 @@ Rectangle {
 
     Image {
         id: parkingLight
-        x: 629
+        anchors.right: parent.right
+        anchors.rightMargin: 120
         y: 27
         z: 5
         source: "pics/parkingLight.png"
@@ -719,7 +713,7 @@ Rectangle {
 
 Rectangle {
     id: digitRectangle
-    x: 315
+    anchors.horizontalCenter: parent.horizontalCenter
     y: 80
     width: 162
     height: 30

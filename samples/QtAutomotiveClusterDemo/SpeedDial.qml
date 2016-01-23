@@ -43,14 +43,17 @@ Item  {
     id: root1
     property real value : 0
 
-    width: 300; height: 300
+    width: 318; height: 318
 
-    Image  { id: speed_inactive; x: -9; y: 8; opacity: 0.8; z: 3; source: "pics/speed_inactive.png"
-
+    Image  {
+        id: speed_inactive; opacity: 0.8; z: 3; source: "pics/speed_inactive.png"
+        anchors.centerIn: parent
+        anchors.horizontalCenterOffset: 2
+        anchors.verticalCenterOffset: 8
     }
     Image  {
         id: needle
-        x: 136; y: 86
+        x: 153; y: 95
         clip: true
         opacity: root1.opacity
         z: 3

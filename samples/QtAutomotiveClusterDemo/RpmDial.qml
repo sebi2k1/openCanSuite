@@ -43,14 +43,17 @@ Item  {
     id: root
     property real value : 0
 
-    width: 300; height: 300
+    width: 318; height: 318
 
-    Image  { id: rpm_inactive; x: -10; y: 0; opacity: 0.8; z: 3; source: "pics/rpm_inactive.png"
-
+    Image  {
+        id: rpm_inactive; opacity: 0.8; z: 3; source: "pics/rpm_inactive.png"
+        anchors.centerIn: parent
+        anchors.horizontalCenterOffset: 2
+        anchors.verticalCenterOffset: 8
     }
     Image  {
         id: needle
-        x: 135; y: 76
+        x: 154; y: 94
         clip: true
         opacity: root.opacity
         z: 3
