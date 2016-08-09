@@ -113,7 +113,7 @@ class QCanSignalContainer : public QObject
 
 public:
     QCanSignalContainer(QString & name, quint32 id, bool isExt)
-     : m_Name(name), m_CanId(id), m_IsExt(isExt), m_Data() {}
+     : m_Name(name), m_CanId(id), m_IsExt(isExt), m_Length(0), m_Data() {}
     ~QCanSignalContainer() {}
 
     const QString & getName() { return m_Name; }
@@ -121,6 +121,8 @@ public:
     void addSignal(QCanSignal* signal) { m_Signals.push_back(signal); }
 
     void dispatchMessage(const QCanMessage & frame);
+
+    void setLength(quint32 length) { m_Length = length; }
 
     QCanSignal * operator[](const QString & name) {
         QVector<QCanSignal*>::iterator iter = m_Signals.begin();
@@ -145,6 +147,7 @@ private:
     QString m_Name;
     const quint32 m_CanId;
     const bool m_IsExt;
+    quint32 m_Length;
     quint8 m_Data[8];
 
     QVector<QCanSignal*> m_Signals;

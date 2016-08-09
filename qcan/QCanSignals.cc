@@ -44,6 +44,8 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
                QString name = messageElem.attribute("name");
                quint32 id   = messageElem.attribute("id").toLong(NULL, 16);
                bool ext     = messageElem.attribute("format", "standard").compare("extended") == 0;
+               quint32 mlength   = messageElem.attribute("length", "0").toLong();
+               quint32 mlength_auto = 0;
 
                QCanSignalContainer *sc = new QCanSignalContainer(name, id, ext);
 
@@ -60,6 +62,12 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
                        name = signalElem.attribute("name");
                        quint32 offset = signalElem.attribute("offset").toLong();
                        quint32 length = signalElem.attribute("length", "1").toLong();
+                       if (mlength == 0) {
+                          quint32 l = (offset + length + 7) >> 3;
+                          if (l > mlength_auto) {
+                             mlength_auto = l;
+                          }
+                       }
                        ENDIANESS order = signalElem.attribute("endianess", "little").compare("little") == 0 ? ENDIANESS_INTEL : ENDIANESS_MOTOROLA;
 
                        QCanSignal * signal = new QCanSignal(name, offset, length, order);
@@ -93,6 +101,10 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
                    }
                }
                
+               if(mlength == 0) {
+                   mlength = mlength_auto;
+               }
+               sc->setLength(mlength);
                s->addMessage(sc);
            }
        }
@@ -286,6 +298,7 @@ void QCanSignalContainer::canMessageValueSend(quint32 offset, quint32 bitLength,
         QCanMessage message;
         message.isExt = m_IsExt;
         message.id = m_CanId;
+        message.dlc = m_Length;
         ::memcpy(&message.data[0], &m_Data[0], 8);
         canMessageSend(message);
     }

@@ -123,7 +123,7 @@ void QCanChannel::canMessageSend(const QCanMessage &message)
     struct can_frame frame;
 
     frame.can_id = message.id;
-    frame.can_dlc = 8;
+    frame.can_dlc = message.dlc;
     ::memcpy(&frame.data[0], &message.data[0], 8);
 
     if(message.isExt) {
