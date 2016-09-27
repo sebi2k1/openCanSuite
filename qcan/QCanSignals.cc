@@ -74,11 +74,10 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
 
                                signal->setEquationOperands(slope, intercept);
 
-                               QString min = valueElem.attribute("min", "0.0");
-                               QString max = valueElem.attribute("max");
+                               QString min = valueElem.attribute("min", "-Inf");
+                               QString max = valueElem.attribute("max", "Inf");
 
-                               if (!max.isEmpty())
-                                   signal->setLimit(min.toDouble(), max.toDouble());
+                               signal->setLimit(min.toDouble(), max.toDouble());
 
                                bool isSigned = valueElem.attribute("type", "unsigned").compare("signed") == 0 ? true : false;
                                signal->setIsSigned(isSigned);
