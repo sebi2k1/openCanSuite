@@ -30,6 +30,8 @@
 #include <QDomElement>
 #include <QMetaType>
 
+#include <limits.h>
+
 class QCanChannel;
 struct QCanMessage;
 
@@ -58,7 +60,7 @@ signals:
 public:
     QCanSignal(QString & name, quint8 offset, quint32 length, ENDIANESS order)
      : m_Name(name), m_Offset(offset), m_Length(length), m_Order(order),
-       m_Slope(1.0), m_Intercept(0.0), m_RawValue(0), m_PhysicalValue(0),
+       m_Slope(1.0), m_Intercept(0.0), m_RawValue(ULONG_MAX), m_PhysicalValue(0),
        m_IsSigned(false) {
         m_Lower = 0.0;
         m_Upper = (1 << m_Length) - 1; 
