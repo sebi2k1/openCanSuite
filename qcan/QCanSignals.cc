@@ -225,7 +225,6 @@ void QCanSignal::decodeFromMessage(const QCanMessage & message)
 
     if (changed)
     {
-printf("value has changed\n");
         emit valueChanged(message.tv, m_PhysicalValue);
         emit valueHasChanged();
     }
