@@ -117,3 +117,18 @@ void QCanChannel::run()
         }
     }
 }
+
+void QCanChannel::canMessageSend(const QCanMessage &message)
+{
+    struct can_frame frame;
+
+    frame.can_id = message.id;
+    frame.can_dlc = message.dlc;
+    ::memcpy(&frame.data[0], &message.data[0], 8);
+
+    if(message.isExt) {
+        frame.can_id |= CAN_EFF_FLAG;
+    }
+
+    write(m_SocketFd, &frame, sizeof(struct can_frame));
+}

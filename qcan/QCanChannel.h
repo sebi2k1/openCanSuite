@@ -49,6 +49,9 @@ class QCanChannel : public QThread
 signals:
     void canMessageReceived(const QCanMessage & frame);
 
+private slots:
+    void canMessageSend(const QCanMessage & message);
+
 public:
     /**
      * @param name interface name of CAN interface

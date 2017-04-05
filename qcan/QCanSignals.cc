@@ -44,8 +44,12 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
                QString name = messageElem.attribute("name");
                quint32 id   = messageElem.attribute("id").toLong(NULL, 16);
                bool ext     = messageElem.attribute("format", "standard").compare("extended") == 0;
+               quint32 mlength   = messageElem.attribute("length", "0").toLong();
+               quint32 mlength_auto = 0;
 
                QCanSignalContainer *sc = new QCanSignalContainer(name, id, ext);
+
+               QObject::connect(sc, SIGNAL(canMessageSend(const QCanMessage &)), channel, SLOT(canMessageSend(const QCanMessage &)));
 
                // Find all "Signal" nodes
                for (QDomNode signalNode = messageElem.firstChild(); !signalNode.isNull(); signalNode = signalNode.nextSibling()) {
@@ -58,9 +62,17 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
                        name = signalElem.attribute("name");
                        quint32 offset = signalElem.attribute("offset").toLong();
                        quint32 length = signalElem.attribute("length", "1").toLong();
+                       if (mlength == 0) {
+                          quint32 l = (offset + length + 7) >> 3;
+                          if (l > mlength_auto) {
+                             mlength_auto = l;
+                          }
+                       }
                        ENDIANESS order = signalElem.attribute("endianess", "little").compare("little") == 0 ? ENDIANESS_INTEL : ENDIANESS_MOTOROLA;
 
                        QCanSignal * signal = new QCanSignal(name, offset, length, order);
+
+                       QObject::connect(signal, SIGNAL(canMessageValueSend(quint32, quint32, ENDIANESS, quint64)), sc, SLOT(canMessageValueSend(quint32, quint32, ENDIANESS, quint64)));
 
                        for (QDomNode valueNode = signalElem.firstChild(); !valueNode.isNull(); valueNode = valueNode.nextSibling()) {
                            if (valueNode.nodeName().compare("Value") == 0) {
@@ -89,6 +101,10 @@ QCanSignals* QCanSignals::createFromKCD(QCanChannel* channel, const QDomElement 
                    }
                }
                
+               if(mlength == 0) {
+                   mlength = mlength_auto;
+               }
+               sc->setLength(mlength);
                s->addMessage(sc);
            }
        }
@@ -164,6 +180,7 @@ void QCanSignals::canMessageReceived(const QCanMessage & frame)
 void QCanSignalContainer::dispatchMessage(const QCanMessage & frame)
 {
     if (frame.id == m_CanId && frame.isExt == frame.isExt) {
+        ::memcpy(&m_Data[0], &frame.data[0], 8);
         QVector<QCanSignal*>::iterator iter = m_Signals.begin();
 
         while(iter != m_Signals.end())
@@ -201,6 +218,15 @@ static quint64 _getvalue(const quint8 * const data, quint32 offset, quint32 leng
     return o;
 }
 
+void QCanSignal::setPhysicalValue(double val)
+{
+    m_PhysicalValue = val;
+
+    m_RawValue = (quint64)((m_PhysicalValue - m_Intercept) / m_Slope);
+
+    canMessageValueSend(m_Offset, m_Length, m_Order, m_RawValue);
+}
+
 void QCanSignal::decodeFromMessage(const QCanMessage & message)
 {
     quint64 value = _getvalue(&message.data[0], m_Offset, m_Length, m_Order);
@@ -230,15 +256,17 @@ void QCanSignal::decodeFromMessage(const QCanMessage & message)
     }
 }
 
-void _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 data[8], quint64 raw_value)
+bool _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 data[8], quint64 raw_value)
 {
     quint64 o;
+    quint64 orig;
 
     if (endianess == ENDIANESS_INTEL) {
         o = le64toh(*((uint64_t *)&data[0]));
     } else {
         o = be64toh(*((uint64_t *)&data[0]));
     }
+    orig = o;
 
     quint64 m = ((1 << bitLength) - 1);
     size_t shift;
@@ -257,5 +285,21 @@ void _setvalue(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint8 da
         o = htobe64(o);
     }
 
+    if(o == orig) return false;
+
     memcpy(&data[0], &o, 8);
+
+    return true;
+}
+
+void QCanSignalContainer::canMessageValueSend(quint32 offset, quint32 bitLength, ENDIANESS endianess, quint64 value)
+{
+    if(_setvalue(offset, bitLength, endianess, &m_Data[0], value)) {
+        QCanMessage message;
+        message.isExt = m_IsExt;
+        message.id = m_CanId;
+        message.dlc = m_Length;
+        ::memcpy(&message.data[0], &m_Data[0], 8);
+        canMessageSend(message);
+    }
 }
